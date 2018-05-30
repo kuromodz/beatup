@@ -1,0 +1,331 @@
+{
+  "TechnoParty": {
+    "ogg": "3254TechnoParty.aac",
+    "singer": "Audition",
+    "name": "3254 Techno Party",
+    "slkauthor": "T3",
+    "bpm": 142.0
+  },
+  "TechnoPartyV2": {
+    "ogg": "3254TechnoParty.aac",
+    "singer": "Audition",
+    "name": "3254 Techno Party V2",
+    "slkauthor": "?",
+    "bpm": 142.0
+  },
+  "FourInTheMorning": {
+    "ogg": "4InTheMorning.aac",
+    "singer": "Gwen Stefani",
+    "name": "4 in the morning",
+    "slkauthor": "Lousy",
+    "bpm": 92.4
+  },
+  "Airplane": {
+    "ogg": "Airplane.aac",
+    "singer": "Turtles",
+    "name": "Airplane",
+    "slkauthor": "T3",
+    "bpm": 120.0
+  },
+  "Aloha": {
+    "ogg": "Aloha.aac",
+    "singer": "Cool",
+    "name": "Aloha",
+    "slkauthor": "RonBWL",
+    "bpm": 101.1
+  },
+  "AmericanIdiot": {
+    "ogg": "AmericanIdiot.aac",
+    "singer": "Greenday",
+    "name": "American Idiot",
+    "slkauthor": "ticanpertrum",
+    "bpm": 186.0
+  },
+  "BackForMore": {
+    "ogg": "BackForMore.aac",
+    "singer": "A-Teens",
+    "name": "Back for more",
+    "slkauthor": "RonBWL",
+    "bpm": 109.0
+  },
+  "BeatCity": {
+    "ogg": "BeatCity.aac",
+    "singer": "Audition",
+    "name": "BeatCity",
+    "slkauthor": "RonBWL",
+    "bpm": 120.0
+  },
+  "BeethovenVirus": {
+    "ogg": "BeethovenVirus.aac",
+    "singer": "Banya",
+    "name": "Beethoven Virus",
+    "slkauthor": "Mad",
+    "bpm": 156.0
+  },
+  "CanCan": {
+    "ogg": "CanCan.aac",
+    "singer": "Audition",
+    "name": "Can Can",
+    "slkauthor": "T3",
+    "bpm": 150.0
+  },
+  "ComeOn": {
+    "ogg": "ComeOn.aac",
+    "singer": "Turtles",
+    "name": "Come on",
+    "slkauthor": "T3",
+    "bpm": 125.0
+  },
+  "DanceDance": {
+    "ogg": "DanceDance.aac",
+    "singer": "Audition",
+    "name": "Dance Dance",
+    "slkauthor": "Crazy",
+    "bpm": 132.0
+  },
+  "DejaVu": {
+    "ogg": "DejaVu.aac",
+    "singer": "SS501",
+    "name": "Deja Vu",
+    "slkauthor": "RonBWL",
+    "bpm": 117.0
+  },
+  "Despretine": {
+    "ogg": "Despretine.aac",
+    "singer": "O-Zone",
+    "name": "Despre tine",
+    "slkauthor": "T3",
+    "bpm": 130.0
+  },
+  "DoItAllNight": {
+    "ogg": "DoItAllNight.aac",
+    "singer": "E-Rotic",
+    "name": "Do it all night",
+    "slkauthor": "RonBWL",
+    "bpm": 143.0
+  },
+  "Euro2005": {
+    "ogg": "Euro2005.aac",
+    "singer": "Audition",
+    "name": "Euro 2005",
+    "slkauthor": "Pleskin85 - dnxp",
+    "bpm": 138.0
+  },
+  "FunkyTown": {
+    "ogg": "FunkyTown.aac",
+    "singer": "Audition",
+    "name": "Funky Town",
+    "slkauthor": "Lousy",
+    "bpm": 130.0
+  },
+  "GangnamStyle": {
+    "ogg": "GNS.aac",
+    "singer": "PSY",
+    "name": "Gangnam Style",
+    "slkauthor": "dnxp",
+    "bpm": 132.0
+  },
+  "GoGo": {
+    "ogg": "GoGo.aac",
+    "singer": "Audition",
+    "name": "Go Go",
+    "slkauthor": "Tryo",
+    "bpm": 150.0
+  },
+  "GoingCrazy": {
+    "ogg": "GoingCrazy.aac",
+    "singer": "Jung Hyun Lee",
+    "name": "Going Crazy",
+    "slkauthor": "ticanpertrum",
+    "bpm": 132.0
+  },
+  "HalfwayAroundTheWorld": {
+    "ogg": "HalfwayAroundTheWorld.aac",
+    "singer": "A-Teens",
+    "name": "Halfway around the World",
+    "slkauthor": "RonBWL",
+    "bpm": 126.6
+  },
+  "HandsUp": {
+    "ogg": "HandsUp.aac",
+    "singer": "Audition",
+    "name": "Hands Up!!!",
+    "slkauthor": "Crazy",
+    "bpm": 135.0
+  },
+  "HandsUpT3": {
+    "ogg": "HandsUp.aac",
+    "singer": "Audition",
+    "name": "Hands Up!!!",
+    "slkauthor": "T3",
+    "bpm": 135.0
+  },
+  "HeyDJ": {
+    "ogg": "HeyDJ.aac",
+    "singer": "?",
+    "name": "Hey DJ",
+    "slkauthor": "dnxp",
+    "bpm": 140.0
+  },
+  "Miracle": {
+    "ogg": "Miracle.aac",
+    "singer": "Super Junior",
+    "name": "Miracle",
+    "slkauthor": "cdiu",
+    "bpm": 50.0
+  },
+  "MovMov": {
+    "ogg": "MovMov.aac",
+    "singer": "Audition",
+    "name": "Mov Mov",
+    "slkauthor": "T3",
+    "bpm": 107.0
+  },
+  "MovMovPatch": {
+    "ogg": "MovMov.aac",
+    "singer": "Audition",
+    "name": "Mov Mov",
+    "slkauthor": "dnxp",
+    "bpm": 107.0
+  },
+  "Move": {
+    "ogg": "Move.aac",
+    "singer": "Audition",
+    "name": "Move",
+    "slkauthor": "ticanpertrum",
+    "bpm": 140.0
+  },
+  "Night": {
+    "ogg": "Night.aac",
+    "singer": "Audition",
+    "name": "Night",
+    "slkauthor": "dnxp",
+    "bpm": 128.0
+  },
+  "NoSpace": {
+    "ogg": "NoSpace.aac",
+    "singer": "Audition",
+    "name": "No Space",
+    "slkauthor": "Mad",
+    "bpm": 138.0
+  },
+  "Oh": {
+    "ogg": "Oh.aac",
+    "singer": "SNSD",
+    "name": "Oh!",
+    "slkauthor": "ticanpertrum",
+    "bpm": 144.0
+  },
+  "ParaParaSakura": {
+    "ogg": "ParaParaSakura.aac",
+    "singer": "Quach Phu Thanh",
+    "name": "Para Para Sakura",
+    "slkauthor": "MrKhiem",
+    "bpm": 151.0
+  },
+  "PartyParty": {
+    "ogg": "PartyParty.aac",
+    "singer": "Audition",
+    "name": "Party Party",
+    "slkauthor": "T3",
+    "bpm": 130.0
+  },
+  "ProudOfYou": {
+    "ogg": "ProudOfYou.aac",
+    "singer": "Fiona Fung",
+    "name": "Proud of you",
+    "slkauthor": "T3",
+    "bpm": 130.0
+  },
+  "SpaceCowboy": {
+    "ogg": "SpaceCowboy.aac",
+    "singer": "Banaroo",
+    "name": "Space Cowboy",
+    "slkauthor": "dnxp",
+    "bpm": 132.0
+  },
+  "TellMeTellMe": {
+    "ogg": "TellMeTellMe.aac",
+    "singer": "Garina Project",
+    "name": "Tell me Tell me",
+    "slkauthor": "T3",
+    "bpm": 130.0
+  },
+  "TheLogicalSong": {
+    "ogg": "TheLogicalSong.aac",
+    "singer": "Scooter",
+    "name": "The Logical Song",
+    "slkauthor": "dnxp",
+    "bpm": 144.0
+  },
+  "TheWayItsRightNow": {
+    "ogg": "TheWayItsRightNow.aac",
+    "singer": "US",
+    "name": "The way it's right now",
+    "slkauthor": "?",
+    "bpm": 137.7
+  },
+  "TwilightZone": {
+    "ogg": "TwilightZone.aac",
+    "singer": "[O] 2 Unlimited",
+    "name": "TwilightZone (Club Mix)",
+    "slkauthor": "Korean Audition",
+    "bpm": 127.9
+  },
+  "UKnow": {
+    "ogg": "UKnow.aac",
+    "singer": "Audition",
+    "name": "U Know",
+    "slkauthor": "RonBWL & whyred10",
+    "bpm": 90.0
+  },
+  "Winter": {
+    "ogg": "Winter.aac",
+    "singer": "Banya",
+    "name": "Winter",
+    "slkauthor": "Mad",
+    "bpm": 168.0
+  },
+  "WithYou": {
+    "ogg": "WithYou.aac",
+    "singer": "Audition",
+    "name": "With You",
+    "slkauthor": "T3-Kr",
+    "bpm": 150.0
+  },
+  "Work": {
+    "ogg": "Work.aac",
+    "singer": "The Saturdays",
+    "name": "Work (Remix)",
+    "slkauthor": "dnxp",
+    "bpm": 128.0
+  },
+  "WorldDance": {
+    "ogg": "WorldDance.aac",
+    "singer": "Yanni",
+    "name": "World Dance",
+    "slkauthor": "dnxp",
+    "bpm": 158.0
+  },
+  "YoDJ": {
+    "ogg": "YoDJ.aac",
+    "singer": "Audition",
+    "name": "Yo! DJ!",
+    "slkauthor": "pleskin85",
+    "bpm": 135.0
+  },
+  "You": {
+    "ogg": "You.aac",
+    "singer": "Audition",
+    "name": "You",
+    "slkauthor": "T3",
+    "bpm": 136.0
+  },
+  "YouAreAlreadyGone": {
+    "ogg": "YouAreAlreadyGone.aac",
+    "singer": "Audition",
+    "name": "You're Already Gone",
+    "slkauthor": "T3",
+    "bpm": 150.0
+  }
+}

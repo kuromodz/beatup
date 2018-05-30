@@ -1,0 +1,49 @@
+<template id="login-template">
+    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="modelTitleId"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Login, please.</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="control-label">Name</label> <br/>
+                        <input class="form-control" id="username" type="text" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label">Password</label> <br/>
+                        <input class="form-control" id="password" type="password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Go!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="songlist-template">
+    <div class="modal fade" id="songlist-modal" tabindex="-1" role="dialog" aria-labelledby="modelTitleId"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Select a song.</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body songlist-body">
+                    <ul id="songlist-container"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
