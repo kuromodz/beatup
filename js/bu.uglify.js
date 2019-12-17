@@ -1,959 +1,1418 @@
-function gl_() {
-    bujs.a.s()
-}
-function BUJS() {}
-BUJS.e = function(s) {
-    var a = this;
-    a.u = {
-        i: "perfect.wav",
-        c: "normal.wav",
-        r: "miss.wav",
-        b: "space.wav"
-    },
-    a.o = new (window.AudioContext || window.webkitAudioContext),
-    a.p = s,
-    async.eachOf(a.u, function(s, n, e) {
-        var t = new XMLHttpRequest;
-        t.open("GET", "sound/" + s, !0),
-        t.responseType = "arraybuffer",
-        t.onload = function() {
-            a.o.decodeAudioData(t.response, function(s) {
-                a.u[n] = s
-            }, function(s) {}),
-            e()
+BUJS.Music_ = function (onComponentFinishLoading_) {
+    var _this = this;
+    _this.sounds_ = {
+        perfect_: "perfect.wav",
+        normal_ : "normal.wav",
+        miss_   : "miss.wav",
+        space_  : "space.wav" };
+    _this.context_ = new (window.AudioContext || window.webkitAudioContext)();
+    _this.onComponentFinishLoading_ = onComponentFinishLoading_;
+
+    async.eachOf(_this.sounds_, function (sound, index, callback) {
+        var request = new XMLHttpRequest();
+        request.open('GET', "sound/" + sound, true);
+        request.responseType = 'arraybuffer';
+        request.onload = function () {
+            _this.context_.decodeAudioData(request.response, function (buffer) {
+                console.log("Loaded sound", sound);
+                _this.sounds_[index] = buffer;
+            }, function (error) {
+                console.error("Error decoding audio data", error);
+            });
+            callback();
+        };
+        request.send();
+    });
+
+    _this.parse_("notes/" + bujs.game_.songId_ + ".json");
+};
+
+/**
+ * Parse song info json
+ */
+BUJS.Music_.prototype.parse_ = function (url) {
+    var _this = this;
+    $.get(url, function (resp) {
+        _this.songInfo_ = bujs.songList_[bujs.game_.songId_];
+        _this.songInfo_.notes_ = resp;
+        _this.tickTime_ = 1000 * 60.0 / (_this.songInfo_.bpm * 4);
+        _this.convertTickToMs_();
+        _this.loadBackgroundMusic_("music/" + _this.songInfo_.ogg);
+    });
+};
+
+/**
+ * Load music from server, pass to audio context
+ */
+BUJS.Music_.prototype.loadBackgroundMusic_ = function (url) {
+    var _this = this;
+    var request = new XMLHttpRequest();
+    bujs.showLoadingMsg_("Downloading music");
+    request.open('GET', url, true);
+    request.responseType = 'arraybuffer';
+    request.onload = function () {
+        // TODO: BUM thingies...
+        if (bujs.iOS_) {
+            _this.response_ = new ArrayBuffer(request.response.byteLength);
+            new Uint8Array(_this.response_).set(new Uint8Array(request.response));
+            bujs.showLoadingMsg_("Touch/click to start music");
         }
-        ,
-        t.send()
-    }),
-    a.j("notes/" + bujs.a.f + ".json")
-}
-,
-BUJS.e.prototype.j = function(s) {
-    var a = this;
-    $.get(s, function(s) {
-        a.g = bujs.l[bujs.a.f],
-        a.g._ = s,
-        a.h = 6e4 / (4 * a.g.bpm),
-        a.v(),
-        a.U("music/" + a.g.ogg)
-    })
-}
-,
-BUJS.e.prototype.U = function(s) {
-    var a = this
-      , n = new XMLHttpRequest;
-    bujs.B("Downloading music"),
-    n.open("GET", s, !0),
-    n.responseType = "arraybuffer",
-    n.onload = function() {
-        bujs.d ? (a.w = new ArrayBuffer(n.response.byteLength),
-        new Uint8Array(a.w).set(new Uint8Array(n.response)),
-        bujs.B("Touch/click to start music")) : a.o.decodeAudioData(n.response, function(s) {
-            a.S = a.J(s),
-            a.m = a.o.currentTime,
-            a.S.start(0),
-            void 0 !== a.p && a.p.call(bujs.a, a)
-        }, function(s) {})
-    }
-    ,
-    n.send()
-}
-,
-BUJS.e.prototype.J = function(s) {
-    var a = this.o.createBufferSource();
-    return a.buffer = s,
-    a.connect(this.o.destination),
-    a
-}
-,
-BUJS.e.prototype.k = function(s) {
-    this.J(s).start(0)
-}
-,
-BUJS.e.prototype.v = function() {
-    for (var s = this, a = 0; a < s.g._.length; a++)
-        s.g._[a].t = s.g._[a].t * s.h
-}
-,
-BUJS.e.prototype.L = function() {
-    return 1e3 * (this.o.currentTime - this.m)
-}
-,
-BUJS.R = function(s) {
-    var a = this;
-    a.M = [],
-    a.p = s,
-    a.T(),
-    a.$(),
-    a.F()
-}
-,
-BUJS.R.prototype.Y = function() {
-    var s = this;
-    async.eachOf(s.A, s.G, function(a) {
-        if (a)
-            ;
         else {
-            s.D();
-            var n = document.getElementById("cvs");
-            s.I = n.getContext("2d");
-            var e = s.P.H * s.P.W
-              , t = s.P.X * s.P.W;
-            n.width = e,
-            n.height = t,
-            void 0 !== s.p && s.p.call(bujs.a, s)
+            _this.context_.decodeAudioData(request.response, function (buffer) {
+                    _this.musicSource_ = _this.loadSound_(buffer);
+                    _this.musicStartTime_ = _this.context_.currentTime;
+                    _this.musicSource_.start(0);
+                    if (typeof _this.onComponentFinishLoading_ !== 'undefined') {
+                        _this.onComponentFinishLoading_.call(bujs.game_, _this);
+                    }
+                },
+                function (error) {
+                    console.error("Error decoding audio data", error);
+                });
         }
-    })
-}
-,
-BUJS.R.prototype.T = function() {
-    this.P = {
-        q: "img/",
-        W: 1,
-        H: 980,
-        X: 400
-    }
-}
-,
-BUJS.R.prototype.$ = function() {
-    var s = this;
-    s.A = {
-        N: ["bg/lafesta.jpg"],
-        z: ["dnxp.png"],
-        C: ["lane_7.png", "lane_4.png", "lane_1.png", "lane_9.png", "lane_6.png", "lane_3.png"],
-        O: ["beatdown_7.png", "beatdown_4.png", "beatdown_1.png", "beatdown_9.png", "beatdown_6.png", "beatdown_3.png"],
-        K: ["tableL.png"],
-        Q: ["laneL.png"],
-        V: ["landingL.png"],
-        Z: ["tableR.png"],
-        ss: ["laneR.png"],
-        as: ["landingR.png"],
-        ns: ["space_frame.png"],
-        es: ["space_frame_cursor.png"],
-        ts: ["space_frame_explode.png"],
-        us: ["space_frame_space_explode.png"],
-        cs: ["arrow_explode.png"],
-        rs: ["a71.png", "a72.png", "a73.png", "a74.png", "a75.png", "a76.png", "a77.png", "a78.png"],
-        bs: ["a41.png", "a42.png", "a43.png", "a44.png", "a45.png", "a46.png", "a47.png", "a48.png"],
-        os: ["a11.png", "a12.png", "a13.png", "a14.png", "a15.png", "a16.png", "a17.png", "a18.png"],
-        ps: ["a91.png", "a92.png", "a93.png", "a94.png", "a95.png", "a96.png", "a97.png", "a98.png"],
-        js: ["a61.png", "a62.png", "a63.png", "a64.png", "a65.png", "a66.png", "a67.png", "a68.png"],
-        fs: ["a31.png", "a32.png", "a33.png", "a34.png", "a35.png", "a36.png", "a37.png", "a38.png"],
-        gs: ["space_frame_letter_b.png", "space_frame_letter_e.png", "space_frame_letter_a.png", "space_frame_letter_t.png", "space_frame_letter_u.png", "space_frame_letter_p.png"],
-        ls: ["space_frame_letter_glow_blue.png"],
-        _s: ["space_frame_letter_glow_yellow.png"],
-        hs: ["space_frame_glow_blue.png"],
-        vs: ["space_frame_glow_yellow.png"],
-        Us: ["up_1.png"],
-        Bs: ["up.png"],
-        ds: ["perfect.png", "great.png", "cool.png", "bad.png", "miss.png"],
-        ws: ["del_1.png", "del_2.png"],
-        Ss: ["chance_1.png", "chance_2.png", "chance_3.png", "chance_4.png"],
-        Js: ["c71.png"],
-        ms: ["c41.png"],
-        ks: ["c11.png"],
-        Ls: ["c91.png"],
-        ys: ["c61.png"],
-        xs: ["c31.png"]
     };
-    for (var a in s.A)
-        s.A[a]._this = s
-}
-,
-BUJS.R.prototype.F = function() {
-    var s = this;
-    this.Rs = {
-        Ms: 80,
-        Ts: 150,
-        $s: 135,
-        Fs: s.P.X - 350,
-        Ys: 3,
-        As: 67,
-        Gs: 131,
-        Ds: 5,
-        Es: 256,
-        Is: 123,
-        Hs: 3,
-        Ps: 1,
-        Ws: 80,
-        Xs: 46,
-        qs: 20,
-        Ns: 20,
-        zs: 50,
-        Cs: 14,
-        Os: 40,
-        Ks: 200,
-        Qs: 60,
-        Vs: 80,
-        Zs: (s.P.H - 600) / 2,
-        sa: 11,
-        aa: 150
+    request.send();
+};
+
+/**
+ * Wrapper to load a specific sound and attach it to the audio context
+ */
+BUJS.Music_.prototype.loadSound_ = function (buffer) {
+    var source = this.context_.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.context_.destination);
+    return source;
+};
+
+/**
+ * Load a sound then play it
+ */
+BUJS.Music_.prototype.playSound_ = function (buffer) {
+    this.loadSound_(buffer).start(0);
+};
+
+BUJS.Music_.prototype.convertTickToMs_ = function () {
+    var _this = this;
+    for (var i = 0; i < _this.songInfo_.notes_.length; i++) {
+        _this.songInfo_.notes_[i].t = _this.songInfo_.notes_[i].t * _this.tickTime_;
     }
-}
-,
-BUJS.R.prototype.G = function(s, a, n) {
-    var e = s._this;
-    async.each(s, function(n, t) {
-        if ("string" == typeof n) {
-            var u = new Image;
-            u.onload = function() {
-                void 0 === e.A[a] && (e.A[a] = []),
-                e.A[a][s.indexOf(n)] = u,
-                t()
+};
+
+BUJS.Music_.prototype.getCurrTime_ = function () {
+    return (this.context_.currentTime - this.musicStartTime_) * 1000;
+};;// interesting read: https://webglfundamentals.org/webgl/lessons/webgl-2d-drawimage.html
+
+
+// alrite, let's go WebGL later for some more challenge :)
+// 2d canvas for playability at the moment
+
+/**
+ * Constructor for this renderer
+ */
+BUJS.Renderer_ = function (onComponentFinishLoading_) {
+    var _this = this;
+    _this.images_ = [];
+    _this.onComponentFinishLoading_ = onComponentFinishLoading_;
+    _this.setupConfig_();
+    _this.setupSpriteInfo_();
+    _this.setupSpriteConsts_();
+};
+
+/**
+ * Load sprite images for each type in parallel
+ */
+BUJS.Renderer_.prototype.asyncLoadSprites_ = function () {
+    var _this = this;
+    async.eachOf(_this.sprites_, _this.loadSpritesForType_,
+        function (err) {
+            if (err) {
+                console.error("Meh. Error", err);
             }
-            ,
-            u.src = e.P.q + n
-        }
-    }, function(s) {
-        s || n()
-    })
-}
-,
-BUJS.R.prototype.na = function() {
-    var s = this;
-    s.I.fillStyle = "black",
-    s.I.clearRect(0, 0, s.P.H, s.P.X)
-}
-,
-BUJS.R.prototype.ea = function(s, a, n, e, t) {
-    var u = this;
-    e || (e = "12px"),
-    n || (n = "Arial"),
-    t || (t = "white"),
-    u.I.font = e + " " + n,
-    u.I.fillStyle = t,
-    u.I.fillText(a, s.x, s.y)
-}
-,
-BUJS.R.prototype.ta = function(s, a) {
-    var n = this;
-    void 0 !== s && null !== s && void 0 !== s.pos && (void 0 === a && (a = 1),
-    n.I.drawImage(s, s.pos.x, s.pos.y, s.width * a, s.height * a))
-}
-,
-BUJS.R.prototype.ua = function(s) {
-    var a = this;
-    a.ta(a.A.Q[0]),
-    a.ta(a.A.ss[0]),
-    a.ta(a.A.V[0]),
-    a.ta(a.A.as[0]),
-    a.ta(a.A.z[0]),
-    a.ia(s)
-}
-,
-BUJS.R.prototype.ca = function() {
-    var s = this;
-    s.ta(s.A.Js[0]),
-    s.ta(s.A.Ls[0]),
-    s.ta(s.A.ms[0]),
-    s.ta(s.A.ys[0]),
-    s.ta(s.A.ks[0]),
-    s.ta(s.A.xs[0])
-}
-,
-BUJS.R.prototype.ia = function(s) {
-    var a = this;
-    s && (s >= 100 && s < 400 ? a.ta(a.A.vs[0]) : s >= 400 && a.ta(a.A.hs[0])),
-    a.ta(a.A.ns[0])
-}
-,
-BUJS.R.prototype.ra = function(s) {
-    var a = this
-      , n = null
-      , e = null
-      , t = 0
-      , u = 0;
-    if (s >= 400 ? (n = a.A.ls,
-    t = 6) : s >= 100 ? (n = a.A.ls,
-    e = a.A._s,
-    u = 6 - (t = Math.floor((s - 100) / 50))) : (n = a.A._s,
-    s >= 80 ? t = 5 : s >= 60 ? t = 4 : s >= 40 ? t = 3 : s >= 20 ? t = 2 : s >= 10 && (t = 1)),
-    null != n)
-        for (i = 0; i < t; i++)
-            a.ba(n[0], a.P.H / 2 - a.Rs.Xs / 2 * (5 - 2 * i) - a.A.ls[0].width / 2, a.P.X - a.Rs.Ws - a.A.ls[0].height / 2),
-            a.ta(n[0]),
-            a.ta(a.A.gs[i]);
-    if (null != e)
-        for (var i = t; i < t + u; i++)
-            a.ba(e[0], a.P.H / 2 - a.Rs.Xs / 2 * (5 - 2 * i) - a.A.ls[0].width / 2, a.P.X - a.Rs.Ws - a.A.ls[0].height / 2),
-            a.ta(e[0]),
-            a.ta(a.A.gs[i])
-}
-,
-BUJS.R.prototype.oa = function() {
-    var s = this;
-    s.ta(s.A.K[0]),
-    s.ta(s.A.Z[0])
-}
-,
-BUJS.R.prototype.ba = function(s, a, n) {
-    s.pos = {
-        x: a,
-        y: n
+            else {
+                console.log("Finished loading sprites.");
+                _this.initSpritePos_();
+                // resize canvas
+                var canvas = document.getElementById("cvs");
+                _this.ctx_ = canvas.getContext("2d");
+                var width = _this.config_.canvasWidth_ * _this.config_.scaleRatio_;
+                var height = _this.config_.canvasHeight_ * _this.config_.scaleRatio_;
+                canvas.width = width;
+                canvas.height = height;
+
+                if (typeof _this.onComponentFinishLoading_ !== "undefined") {
+                    _this.onComponentFinishLoading_.call(bujs.game_, _this);
+                }
+            }
+        });
+};
+
+/**
+ * Initialize config variables
+ */
+BUJS.Renderer_.prototype.setupConfig_ = function () {
+    this.config_ = {
+        imagePath_          : "img/",
+        scaleRatio_         : 1,
+        canvasWidth_        : 980,
+        canvasHeight_       : 400
+    };
+};
+
+/**
+ * Initialize sprite names
+ */
+BUJS.Renderer_.prototype.setupSpriteInfo_ = function () {
+    var _this = this;
+    _this.sprites_ = {
+        background_: ["bg/lafesta.jpg"],
+        dnxpLogo_  : ["dnxp.png"],
+        laneDown_  : ["lane_7.png", "lane_4.png", "lane_1.png",
+                     "lane_9.png", "lane_6.png", "lane_3.png"],
+        beatDown_  : ["beatdown_7.png", "beatdown_4.png", "beatdown_1.png",
+                      "beatdown_9.png", "beatdown_6.png", "beatdown_3.png"],
+        tableL_    : ["tableL.png"],
+        laneL_     : ["laneL.png"],
+        landingL_  : ["landingL.png"],
+        tableR_    : ["tableR.png"],
+        laneR_     : ["laneR.png"],
+        landingR_  : ["landingR.png"],
+        spaceFrame_: ["space_frame.png"],
+        spaceFrameCursor_  : ["space_frame_cursor.png"],
+        spaceFrameExplode_ : ["space_frame_explode.png"],
+        spaceExplode_      : ["space_frame_space_explode.png"],
+        arrowExplode_      : ["arrow_explode.png"],
+        a7_        : ["a71.png", "a72.png", "a73.png", "a74.png", "a75.png", "a76.png", "a77.png", "a78.png"],
+        a4_        : ["a41.png", "a42.png", "a43.png", "a44.png", "a45.png", "a46.png", "a47.png", "a48.png"],
+        a1_        : ["a11.png", "a12.png", "a13.png", "a14.png", "a15.png", "a16.png", "a17.png", "a18.png"],
+        a9_        : ["a91.png", "a92.png", "a93.png", "a94.png", "a95.png", "a96.png", "a97.png", "a98.png"],
+        a6_        : ["a61.png", "a62.png", "a63.png", "a64.png", "a65.png", "a66.png", "a67.png", "a68.png"],
+        a3_        : ["a31.png", "a32.png", "a33.png", "a34.png", "a35.png", "a36.png", "a37.png", "a38.png"],
+        spaceFrameLetters_             : ["space_frame_letter_b.png", "space_frame_letter_e.png", "space_frame_letter_a.png",
+                                        "space_frame_letter_t.png", "space_frame_letter_u.png", "space_frame_letter_p.png"],
+        spaceFrameLetterGlowBlue_      : ["space_frame_letter_glow_blue.png"],
+        spaceFrameLetterGlowYellow_    : ["space_frame_letter_glow_yellow.png"],
+        spaceFrameGlowBlue_            : ["space_frame_glow_blue.png"],
+        spaceFrameGlowYellow_          : ["space_frame_glow_yellow.png"],
+        blueUp_        : ["up_1.png"],
+        yellowUp_      : ["up.png"],
+        noteResults_   : ["perfect.png", "great.png", "cool.png", "bad.png", "miss.png"],
+        delIcons_      : ["del_1.png", "del_2.png"],
+        chanceIcons_      : ["chance_1.png", "chance_2.png", "chance_3.png", "chance_4.png"],
+        c7_        : ["c71.png"],
+        c4_        : ["c41.png"],
+        c1_        : ["c11.png"],
+        c9_        : ["c91.png"],
+        c6_        : ["c61.png"],
+        c3_        : ["c31.png"]
+    };
+
+    for (var key in _this.sprites_) _this.sprites_[key]._this = _this;   // add _this...
+};
+
+/**
+ * Some special constants for drawing
+ */
+BUJS.Renderer_.prototype.setupSpriteConsts_ = function () {
+    var _this = this;
+    _this.consts_ = {
+        chanceDist_         : 80,
+        baseResultLine_     : 150,
+        arrowAnimationTime_ : 135,
+        laneYStart_         : _this.config_.canvasHeight_ - 350,
+        lane1Yofs_          : 3,
+        lane2Yofs_          : 3+64,        // Renderer_.spritePos_.lane1Yofs + 64,
+        lane3Yofs_          : 3+64+64,     // Renderer_.spritePos_.lane2Yofs + 64,
+        lane2Xofs_          : 5,
+        laneWidth_          : 256,
+        tableWidth_         : 123,
+        tableWidthTrans_    : 3,
+        arrowLaneOfs_       : 1,
+        spaceMarginBottom_  : 80,
+        beatupLetterDist_   : 46,
+        dnxpLogoMargin_     : 20,
+        textHeight_         : 20,
+        textMarginTop_      : 64,
+        numNotes_           : 14,
+        playerListUp_       : 40,
+        playerListName_     : 200,
+        playerListScore_    : 60,
+        playerListYofs_     : 80,
+        scoreTableXofs_     : (_this.config_.canvasWidth_ - 600) / 2,
+        fontSize_           : 11,
+        helpYofs_           : 150
     }
+};
+
+
+/**
+ * Load a set of images for a type, e.g.
+ * { noteResults   : ["perfect.png", "great.png", "cool.png", "bad.png", "miss.png"] },
+ */
+BUJS.Renderer_.prototype.loadSpritesForType_ = function (spriteInfo, key, callback) {
+    var _this = spriteInfo._this;
+    async.each(spriteInfo, function (fileName, urlCallback) {
+            if (typeof fileName !== "string") return;
+            // console.log("sprite", key, "fetching ", fileName);
+            var img = new Image();
+            img.onload = function () {
+                if (typeof _this.sprites_[key] === "undefined") {
+                    _this.sprites_[key] = [];
+                }
+                _this.sprites_[key][spriteInfo.indexOf(fileName)] = img;
+                urlCallback();
+            };
+            img.src = _this.config_.imagePath_ + fileName;
+        },
+        function (err) {
+            // loaded all images for one spriteInfo ok.
+            if (err) {
+                console.error("Meh. Error", err);
+            }
+            else {
+                console.log("Finished fetching images for object", key);
+                callback();
+            }
+        });
+};
+
+/**
+ * Clear the whole canvas
+ */
+BUJS.Renderer_.prototype.clear_ = function () {
+    var _this = this;
+    _this.ctx_.fillStyle = "black";
+    _this.ctx_.clearRect(0, 0, _this.config_.canvasWidth_, _this.config_.canvasHeight_);
+};
+
+/**
+ * A wrapper to write some text on canvas
+ */
+BUJS.Renderer_.prototype.writeText_ = function (pos, text, font, size, color) {
+    var _this = this;
+    if (!size) size = "12px";
+    if (!font) font = "Arial";
+    if (!color) color = "white";
+    _this.ctx_.font = size + " " + font;
+    _this.ctx_.fillStyle = color;
+    _this.ctx_.textAlign = "left";
+    _this.ctx_.fillText(text, pos.x, pos.y);
+};
+
+/**
+ * Draw a specific sprite
+ */
+BUJS.Renderer_.prototype.drawSprite_ = function (sprite, scale) {
+    var _this = this;
+    if (typeof sprite === "undefined" || sprite === null) {
+        console.log("meh.");
+    }
+    if (typeof sprite !== "undefined" && sprite !== null && typeof sprite.pos !== "undefined") {
+        if (typeof scale === "undefined") scale = 1;
+        _this.ctx_.drawImage(sprite, sprite.pos.x, sprite.pos.y, sprite.width * scale, sprite.height * scale);
+    }
+};
+
+/**
+ * Draw fix contents, such as lanes, landings, logo...
+ */
+BUJS.Renderer_.prototype.drawFixContent_ = function (combo) {
+    var _this = this;
+
+    // lane, landing, logo
+    _this.drawSprite_(_this.sprites_.laneL_[0]);
+    _this.drawSprite_(_this.sprites_.laneR_[0]);
+    _this.drawSprite_(_this.sprites_.landingL_[0]);
+    _this.drawSprite_(_this.sprites_.landingR_[0]);
+    _this.drawSprite_(_this.sprites_.dnxpLogo_[0]);
+    _this.drawSpaceFrame_(combo);
+    _this.drawResults_();
+};
+
+BUJS.Renderer_.prototype.drawTouchArrows_ = function () {
+    var _this = this;
+    _this.drawSprite_(_this.sprites_.c7_[0]);
+    _this.drawSprite_(_this.sprites_.c9_[0]);
+    _this.drawSprite_(_this.sprites_.c4_[0]);
+    _this.drawSprite_(_this.sprites_.c6_[0]);
+    _this.drawSprite_(_this.sprites_.c1_[0]);
+    _this.drawSprite_(_this.sprites_.c3_[0]);
+};
+
+BUJS.Renderer_.prototype.drawResults_ = function () {
+    var _this = this;
+    var x = (_this.config_.canvasWidth_ - 135) / 2;
+    var y = (_this.consts_.laneYStart_ + _this.consts_.textMarginTop_);
+    _this.writeText_({x: x, y: y},
+        'X/P/G/C/B/M: ' + bujs.game_.perx_ + '/' + bujs.game_.pgcbm_[0] + '/'
+        + bujs.game_.pgcbm_[1] + '/' + bujs.game_.pgcbm_[2] + '/'
+        + bujs.game_.pgcbm_[3] + '/' + bujs.game_.pgcbm_[4]);
+    _this.writeText_({x: x, y: y + 16}, 'Score:' + Math.round(bujs.game_.score_));
+    _this.writeText_({x: x, y: y + 32}, 'Combo:' + bujs.game_.combo_);
+    var pgcbm = bujs.game_.pgcbm_,
+        perpercent = 0;
+    if (pgcbm[0] !== 0 || pgcbm[1] !== 0 ||
+        pgcbm[2] !== 0 || pgcbm[3] !== 0 ||
+        pgcbm[4] !== 0) {
+        perpercent = (pgcbm[0] * 100) / (pgcbm[0] + pgcbm[1] + pgcbm[2] + pgcbm[3] + pgcbm[4]);
+    }
+    _this.writeText_({x: x, y: y + 48}, 'Perfect %:' + perpercent.toFixed(2) + '%');
+    _this.writeText_({x: x, y: y + 64}, 'Max X:' + bujs.game_.xmax_);
+};
+
+/**
+ * Draw space frame
+ */
+BUJS.Renderer_.prototype.drawSpaceFrame_ = function (combo) {
+    var _this = this;
+    if (combo) {
+        if (combo >= 100 && combo < 400) {
+            _this.drawSprite_(_this.sprites_.spaceFrameGlowYellow_[0]);
+        }
+        else if (combo >= 400) {
+            _this.drawSprite_(_this.sprites_.spaceFrameGlowBlue_[0]);
+        }
+    }
+    _this.drawSprite_(_this.sprites_.spaceFrame_[0]);
+};
+
+/**
+ * Beat Up text at the bottom
+ */
+BUJS.Renderer_.prototype.drawBeatupText_ = function (combo) {
+    var _this = this;
+    // B-E-A-T-U-P glows
+    var letterGlow1 = null;
+    var letterGlow2 = null;
+    var numGlow1 = 0;
+    var numGlow2 = 0;
+
+    // decide what to draw
+    if (combo >= 400) {
+        // all blue
+        letterGlow1 = _this.sprites_.spaceFrameLetterGlowBlue_;
+        numGlow1 = 6;
+    }
+    else if (combo >= 100) {
+        // some blue + some yellow
+        letterGlow1 = _this.sprites_.spaceFrameLetterGlowBlue_;
+        letterGlow2 = _this.sprites_.spaceFrameLetterGlowYellow_;
+        numGlow1 = Math.floor((combo - 100) / 50);
+        numGlow2 = 6 - numGlow1;
+    }
+    else {
+        // some yellow
+        letterGlow1 = _this.sprites_.spaceFrameLetterGlowYellow_;
+        if (combo >= 80) numGlow1 = 5;
+        else if (combo >= 60) numGlow1 = 4;
+        else if (combo >= 40) numGlow1 = 3;
+        else if (combo >= 20) numGlow1 = 2;
+        else if (combo >= 10) numGlow1 = 1;
+    }
+
+    // and draw them
+    if (letterGlow1 != null) {
+        for (var i = 0; i < numGlow1; i++) {
+            // the glow
+            _this.setSpritePos_(letterGlow1[0],
+                _this.config_.canvasWidth_ / 2 - _this.consts_.beatupLetterDist_ / 2 * (5 - i * 2) - _this.sprites_.spaceFrameLetterGlowBlue_[0].width / 2,
+                _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.spaceFrameLetterGlowBlue_[0].height / 2);
+            _this.drawSprite_(letterGlow1[0]);
+
+            // and its letter
+            _this.drawSprite_(_this.sprites_.spaceFrameLetters_[i]);
+        }
+    }
+    if (letterGlow2 != null) {
+        for (var i = numGlow1; i < numGlow1 + numGlow2; i++) {
+            // the glow
+            _this.setSpritePos_(letterGlow2[0],
+                _this.config_.canvasWidth_ / 2 - _this.consts_.beatupLetterDist_ / 2 * (5 - i * 2) - _this.sprites_.spaceFrameLetterGlowBlue_[0].width / 2,
+                _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.spaceFrameLetterGlowBlue_[0].height / 2);
+            _this.drawSprite_(letterGlow2[0]);
+
+            // and its letter
+            _this.drawSprite_(_this.sprites_.spaceFrameLetters_[i]);
+        }
+    }
+};
+
+/**
+ * Draw table parts. Should be called last to overdraw the arrows
+ */
+BUJS.Renderer_.prototype.drawTable_ = function () {
+    var _this = this;
+    _this.drawSprite_(_this.sprites_.tableL_[0]);
+    _this.drawSprite_(_this.sprites_.tableR_[0]);
+};
+
+/**
+ * Set sprite position
+ */
+BUJS.Renderer_.prototype.setSpritePos_ = function (img, posX, posY) {
+    img.pos = {x: posX, y: posY};
+};
+
+/**
+ * Define sprite position. These are fixed.
+ */
+BUJS.Renderer_.prototype.initSpritePos_ = function () {
+    var _this = this;
+    _this.setSpritePos_(_this.sprites_.dnxpLogo_[0],
+        _this.config_.canvasWidth_ - _this.sprites_.dnxpLogo_[0].width - _this.consts_.dnxpLogoMargin_,
+        _this.config_.canvasHeight_ - _this.sprites_.dnxpLogo_[0].height - _this.consts_.dnxpLogoMargin_);
+
+    _this.setSpritePos_(_this.sprites_.tableL_[0],
+        0,
+        _this.consts_.laneYStart_);
+
+    _this.setSpritePos_(_this.sprites_.laneL_[0],
+        _this.consts_.tableWidth_ - _this.consts_.tableWidthTrans_ - _this.consts_.chanceDist_,
+        _this.consts_.laneYStart_);
+
+    _this.setSpritePos_(_this.sprites_.landingL_[0],
+        _this.sprites_.laneL_[0].pos.x + _this.consts_.laneWidth_,
+        _this.consts_.laneYStart_);
+
+
+    _this.setSpritePos_(_this.sprites_.tableR_[0],
+        _this.config_.canvasWidth_ - _this.consts_.tableWidth_,
+        _this.consts_.laneYStart_);
+
+    _this.setSpritePos_(_this.sprites_.laneR_[0],
+        _this.config_.canvasWidth_ - _this.consts_.tableWidth_ + _this.consts_.tableWidthTrans_ - _this.consts_.laneWidth_ + _this.consts_.chanceDist_,
+        _this.consts_.laneYStart_);
+
+    _this.setSpritePos_(_this.sprites_.landingR_[0],
+        _this.config_.canvasWidth_ - _this.consts_.tableWidth_ + _this.consts_.tableWidthTrans_ - _this.consts_.laneWidth_ - _this.sprites_.landingR_[0].width + _this.consts_.chanceDist_,
+        _this.consts_.laneYStart_);
+
+    _this.setSpritePos_(_this.sprites_.spaceFrame_[0],
+        (_this.config_.canvasWidth_ - _this.sprites_.spaceFrame_[0].width) / 2,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.spaceFrame_[0].height / 2);
+
+    // del icons
+    _this.setSpritePos_(_this.sprites_.delIcons_[0], 
+        _this.config_.canvasWidth_/2 + _this.sprites_.spaceFrame_[0].width/2, 
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.delIcons_[0].height / 2);
+
+    _this.setSpritePos_(_this.sprites_.delIcons_[1],
+        _this.config_.canvasWidth_/2 + _this.sprites_.spaceFrame_[0].width/2,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.delIcons_[1].height / 2);
+
+    // chance icons
+    _this.setSpritePos_(_this.sprites_.chanceIcons_[0],
+        _this.config_.canvasWidth_/2 - _this.sprites_.spaceFrame_[0].width/2 - _this.sprites_.chanceIcons_[0].width,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.chanceIcons_[0].height / 2);
+
+    _this.setSpritePos_(_this.sprites_.chanceIcons_[1],
+        _this.config_.canvasWidth_/2 - _this.sprites_.spaceFrame_[0].width/2 - _this.sprites_.chanceIcons_[1].width,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.chanceIcons_[1].height / 2);
+
+    _this.setSpritePos_(_this.sprites_.chanceIcons_[2],
+        _this.config_.canvasWidth_/2 - _this.sprites_.spaceFrame_[0].width/2 - _this.sprites_.chanceIcons_[2].width,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.chanceIcons_[2].height / 2);
+
+    _this.setSpritePos_(_this.sprites_.chanceIcons_[3],
+        _this.config_.canvasWidth_/2 - _this.sprites_.spaceFrame_[0].width/2 - _this.sprites_.chanceIcons_[3].width,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.chanceIcons_[3].height / 2);
+
+    // space glows
+    _this.setSpritePos_(_this.sprites_.spaceFrameGlowBlue_[0],
+        (_this.config_.canvasWidth_ - _this.sprites_.spaceFrame_[0].width) / 2,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.spaceFrame_[0].height / 2);
+
+    _this.setSpritePos_(_this.sprites_.spaceFrameGlowYellow_[0],
+        (_this.config_.canvasWidth_ - _this.sprites_.spaceFrame_[0].width) / 2,
+        _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.spaceFrame_[0].height / 2);
+
+    // B-E-A-T-U-P letters
+    for (var i = 0; i < 6; i++) {
+        _this.setSpritePos_(_this.sprites_.spaceFrameLetters_[i],
+            _this.config_.canvasWidth_ / 2 - _this.consts_.beatupLetterDist_ / 2 * (5 - i * 2) - _this.sprites_.spaceFrameLetters_[0].width / 2,
+            _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.spaceFrameLetters_[0].height / 2);
+    }
+    var leftX = 0,
+        rightX = _this.config_.canvasWidth_ - _this.sprites_.a7_[0].width;
+    _this.setSpritePos_(_this.sprites_.c7_[0], leftX, _this.consts_.laneYStart_ + _this.consts_.lane1Yofs_);
+    _this.setSpritePos_(_this.sprites_.c9_[0], rightX, _this.consts_.laneYStart_ + _this.consts_.lane1Yofs_);
+    _this.setSpritePos_(_this.sprites_.c4_[0], leftX, _this.consts_.laneYStart_ + _this.consts_.lane2Yofs_);
+    _this.setSpritePos_(_this.sprites_.c6_[0], rightX, _this.consts_.laneYStart_ + _this.consts_.lane2Yofs_);
+    _this.setSpritePos_(_this.sprites_.c1_[0], leftX, _this.consts_.laneYStart_ + _this.consts_.lane3Yofs_);
+    _this.setSpritePos_(_this.sprites_.c3_[0], rightX, _this.consts_.laneYStart_ + _this.consts_.lane3Yofs_);
+};
+
+
+/**
+ * Draw a single arrow on the lane/landing
+ */
+BUJS.Renderer_.prototype.drawArrow_ = function (arrowSprite, xOfs, yOfs, leftLane, noteTime) {
+    var _this = this;
+    var delta = 0;
+    var x = 0;
+    var y = _this.consts_.laneYStart_ + yOfs;
+    var currTime = bujs.game_.music_.getCurrTime_();
+    if (leftLane) {
+        x = (xOfs + _this.consts_.tableWidth_ - _this.consts_.tableWidthTrans_ +
+            _this.consts_.laneWidth_ - _this.consts_.chanceDist_ +
+            _this.consts_.arrowLaneOfs_) -
+            (noteTime - currTime - delta) * 40.0 / bujs.game_.music_.tickTime_;
+    }
+    else {
+        x = _this.config_.canvasWidth_ -
+            (xOfs + _this.consts_.tableWidth_ - _this.consts_.tableWidthTrans_ +
+                _this.consts_.laneWidth_ - _this.consts_.chanceDist_ +
+                _this.consts_.arrowLaneOfs_ + arrowSprite.width) +
+            (noteTime - currTime - delta) * 40.0 / bujs.game_.music_.tickTime_;
+    }
+
+    // skip out of visible areas
+    if (x > _this.config_.canvasWidth_ - _this.consts_.tableWidth_ || x + arrowSprite.width < _this.consts_.tableWidth_) {
+        return;
+    }
+
+    _this.setSpritePos_(arrowSprite, x, y);
+    _this.drawSprite_(arrowSprite);
+};
+
+/**
+ * Draw arrows for perfect alignment
+ */
+BUJS.Renderer_.prototype.drawPerfectArrows_ = function () {
+    var _this = this;
+    var xOfs = 1;
+    _this.drawArrow_(_this.sprites_.a7_[0], xOfs, _this.consts_.lane1Yofs_, true, bujs.game_.music_.getCurrTime_());
+    _this.drawArrow_(_this.sprites_.a9_[0], xOfs, _this.consts_.lane1Yofs_, false, bujs.game_.music_.getCurrTime_());
+    _this.drawArrow_(_this.sprites_.a4_[0], xOfs + _this.consts_.lane2Xofs_, _this.consts_.lane2Yofs_, true, bujs.game_.music_.getCurrTime_());
+    _this.drawArrow_(_this.sprites_.a6_[0], xOfs + _this.consts_.lane2Xofs_, _this.consts_.lane2Yofs_, false, bujs.game_.music_.getCurrTime_());
+    _this.drawArrow_(_this.sprites_.a1_[0], xOfs, _this.consts_.lane3Yofs_, true, bujs.game_.music_.getCurrTime_());
+    _this.drawArrow_(_this.sprites_.a3_[0], xOfs, _this.consts_.lane3Yofs_, false, bujs.game_.music_.getCurrTime_());
+
+};
+
+/**
+ * Draw arrows for current notes;
+ */
+BUJS.Renderer_.prototype.drawNotes_ = function (currTime) {
+    var _this = this;
+    var lastAvailNote = Math.min(bujs.game_.firstAvailNote_ + _this.consts_.numNotes_, bujs.game_.music_.songInfo_.notes_.length);
+    if (bujs.game_.firstAvailNote_ >= 0) {
+        var tickTime = bujs.game_.music_.tickTime_;
+        for (var i = bujs.game_.firstAvailNote_; i < lastAvailNote; i++) {
+            var note = bujs.game_.music_.songInfo_.notes_[i];
+            var noteTime = note.t;
+            var noteKey = note.n;
+
+            // max note time for drawing
+            var maxArrowAvailTime = currTime + tickTime * (_this.consts_.numNotes_ + 1);
+            var maxSpaceAvailTime = currTime + tickTime * 8;
+            if ((noteKey !== 5 && noteTime > maxArrowAvailTime) ||
+                (noteKey === 5 && noteTime > maxSpaceAvailTime)) break;
+
+
+            // only draw unpressed notes
+            if (!note.pressed_) {
+                var imageIndex = 0;
+                var leftLane = true;
+                var xOfs = 0;
+                var yOfs = 0;
+                var arrowToDraw = null;
+
+                var timeDiff = currTime - noteTime;
+                if (timeDiff < 0){
+                    timeDiff = -timeDiff;
+                }
+                imageIndex = Math.round(timeDiff / tickTime) % 4;
+                // appropriate image surface, y offset
+                // default
+                if (bujs.game_.chance_ === 0) {
+                    switch (noteKey) {
+                        case 7 : arrowToDraw = _this.sprites_.a7_[imageIndex]; yOfs = _this.consts_.lane1Yofs_; break;
+                        case 4 : arrowToDraw = _this.sprites_.a4_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 1 : arrowToDraw = _this.sprites_.a1_[imageIndex]; yOfs = _this.consts_.lane3Yofs_; break;
+                        case 9 : leftLane = false; arrowToDraw = _this.sprites_.a9_[imageIndex]; yOfs = _this.consts_.lane1Yofs_;  break;
+                        case 6 : leftLane = false; arrowToDraw = _this.sprites_.a6_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 3 : leftLane = false; arrowToDraw = _this.sprites_.a3_[imageIndex]; yOfs = _this.consts_.lane3Yofs_; break;
+                    }
+                }
+                // set chance number 1 : all mid lane
+                if (bujs.game_.chance_ === 1) {
+                    switch (noteKey) {
+                        case 7 : arrowToDraw = _this.sprites_.a7_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 4 : arrowToDraw = _this.sprites_.a4_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 1 : arrowToDraw = _this.sprites_.a1_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 9 : leftLane = false; arrowToDraw = _this.sprites_.a9_[imageIndex]; yOfs = _this.consts_.lane2Yofs_;  break;
+                        case 6 : leftLane = false; arrowToDraw = _this.sprites_.a6_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 3 : leftLane = false; arrowToDraw = _this.sprites_.a3_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                    }
+                }
+                // set chance number 2 : invert up/down
+                if (bujs.game_.chance_ === 2) {
+                    switch (noteKey) {
+                        case 7 : arrowToDraw = _this.sprites_.a7_[imageIndex]; yOfs = _this.consts_.lane3Yofs_; break;
+                        case 4 : arrowToDraw = _this.sprites_.a4_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 1 : arrowToDraw = _this.sprites_.a1_[imageIndex]; yOfs = _this.consts_.lane1Yofs_; break;
+                        case 9 : leftLane = false; arrowToDraw = _this.sprites_.a9_[imageIndex]; yOfs = _this.consts_.lane3Yofs_;  break;
+                        case 6 : leftLane = false; arrowToDraw = _this.sprites_.a6_[imageIndex]; yOfs = _this.consts_.lane2Yofs_; break;
+                        case 3 : leftLane = false; arrowToDraw = _this.sprites_.a3_[imageIndex]; yOfs = _this.consts_.lane1Yofs_; break;
+                    }
+                }
+
+                // draw it!
+                if (arrowToDraw !== null) {
+                    _this.drawArrow_(arrowToDraw, xOfs, yOfs, leftLane, noteTime);
+                }
+                else if (noteKey === 5) {
+                    // a space?
+                    var cursorLx = (_this.config_.canvasWidth_ - _this.sprites_.spaceFrameCursor_[0].width) / 2 - (noteTime - currTime)/tickTime*31.0/2;
+                    var cursorRx = (_this.config_.canvasWidth_ - _this.sprites_.spaceFrameCursor_[0].width)/  2 + (noteTime - currTime)/tickTime*31.0/2;
+                    var cursorY = _this.config_.canvasHeight_ - _this.consts_.spaceMarginBottom_ - _this.sprites_.spaceFrameCursor_[0].height / 2;
+                    _this.setSpritePos_(_this.sprites_.spaceFrameCursor_[0], cursorLx, cursorY);
+                    _this.drawSprite_(_this.sprites_.spaceFrameCursor_[0]);
+
+                    _this.setSpritePos_(_this.sprites_.spaceFrameCursor_[0], cursorRx, cursorY);
+                    _this.drawSprite_(_this.sprites_.spaceFrameCursor_[0]);
+                }
+            }
+        }
+    }
+};
+
+/**
+ * Draw note result big text (p/g/c/b/m) on top
+ */
+BUJS.Renderer_.prototype.drawBigNoteResultText_ = function () {
+    var _this = this;
+    if (bujs.game_.lastNoteTime_ > 0) {
+        var diff = bujs.game_.music_.getCurrTime_() - bujs.game_.lastNoteTime_;
+        var noteResult = _this.sprites_.noteResults_[bujs.game_.lastNoteResult_];
+
+        // result width / height
+        var ratio = 1;
+        if (diff < 50) ratio = 1 + (50 - diff) / 90;
+
+        // draw it with ratio
+        _this.setSpritePos_(noteResult, (_this.config_.canvasWidth_ - noteResult.width * ratio) / 2, (_this.consts_.baseResultLine_ - noteResult.height * ratio) / 2);
+        _this.drawSprite_(noteResult, ratio);
+
+        if (diff > 200) {
+            bujs.game_.lastNoteResult_ = 0;
+            bujs.game_.lastNoteTime_ = 0;
+        }
+    }
+};;BUJS.Input_ = function () {
+    var _this = this;
+    $("body")[0].onkeydown = function (e) {
+        var keyCode = e.keyCode;
+        _this.checkKeyboard_(keyCode);
+    };
+    var el = document.getElementsByTagName("canvas")[0];
+    el.addEventListener("touchstart", function (e) {
+        _this.touchStart_(e);
+    }, false);
+    if (bujs.iOS_) {
+        el.addEventListener("touchend", function (e) {
+            _this.touchEnd_(e);
+        }, false);
+    }
+};
+
+BUJS.Input_.prototype.checkKeyboard_ = function (keyCode) {
+    var _this = this;
+    switch (keyCode) {
+        case 112:   // f1: toggle help
+            bujs.game_.showHelp_ = !bujs.game_.showHelp_;
+            break;
+        case 113:   // f2: save replay
+            break;
+        case 114:   // f3: chance
+            bujs.game_.chance_ = (bujs.game_.chance_ + 1) % 3;
+            break;
+        case 115:   // f4: background
+            bujs.game_.showBg_ = (bujs.game_.showBg_ + 1) % (bujs.game_.renderer_.sprites_.background_.length + 1);
+            break;
+        case 16:    // lshift: toggle arrow perfect position
+            bujs.game_.showPerfArrows_ = !bujs.game_.showPerfArrows_;
+            break;
+        case 93:    // rcommand/rwin: toggle autoplay
+            bujs.game_.autoplay_ = !bujs.game_.autoplay_;
+        case 55:    // 7
+        case 82:    // r
+        case 103:   // numpad7
+        case 36:    // home
+            if (!bujs.game_.autoplay_) _this.keyDown_(7);
+            break;
+        case 52:    // 4
+        case 70:    // f
+        case 100:   // numpad4
+        case 37:    // left
+            if (!bujs.game_.autoplay_) _this.keyDown_(4);
+            break;
+        case 49:    // 1
+        case 86:    // v
+        case 97:    // numpad1
+        case 35:    // en
+            if (!bujs.game_.autoplay_) _this.keyDown_(1);
+            break;
+        case 57:    // 9
+        case 73:    // i
+        case 105:   // numpad9
+        case 33:    // pg up
+            if (!bujs.game_.autoplay_) _this.keyDown_(9);
+            break;
+        case 54:    // 6
+        case 75:    // k
+        case 102:   // numpad6
+        case 39:    // right
+            if (!bujs.game_.autoplay_) _this.keyDown_(6);
+            break;
+        case 51:    // 3
+        case 77:    // m
+        case 99:    // numpad3
+        case 34:    // pg dn
+            if (!bujs.game_.autoplay_) _this.keyDown_(3);
+            break;
+        case 48:    // 9
+        case 53:    // 5
+        case 32:    // space
+        case 96:    // numpad0
+        case 101:   // numpad5
+            if (!bujs.game_.autoplay_) _this.keyDown_(5);
+            break;
+
+    }
+};
+
+BUJS.Input_.prototype.keyDown_ = function (keyMap) {
+    var leftLane = true;
+    var spriteLaneIndex = -1;
+    var xOfs = 0;
+    var xOfsBeat = 0;
+    var yOfs = 0;
+    var yOfsBeat = 0;
+    switch (keyMap) {
+        case 7 : spriteLaneIndex = 0; yOfs = bujs.game_.renderer_.consts_.lane1Yofs_; break;
+        case 4 : spriteLaneIndex = 1; xOfsBeat = 6; yOfs = bujs.game_.renderer_.consts_.lane2Yofs_; break;
+        case 1 : spriteLaneIndex = 2; yOfs = bujs.game_.renderer_.consts_.lane3Yofs_; break;
+        case 9 : spriteLaneIndex = 3; leftLane = false; yOfs = bujs.game_.renderer_.consts_.lane1Yofs_; break;
+        case 6 : spriteLaneIndex = 4; leftLane = false; xOfsBeat = -5; yOfs = bujs.game_.renderer_.consts_.lane2Yofs_; break;
+        case 3 : spriteLaneIndex = 5; leftLane = false; yOfs = bujs.game_.renderer_.consts_.lane3Yofs_; break;
+    }
+    if (spriteLaneIndex >= 0) {
+        if (leftLane) {
+            xOfs = bujs.game_.renderer_.consts_.tableWidth_ - bujs.game_.renderer_.consts_.tableWidthTrans_ - bujs.game_.renderer_.consts_.chanceDist_ - bujs.game_.renderer_.consts_.arrowLaneOfs_;
+            xOfsBeat = xOfsBeat + bujs.game_.renderer_.consts_.tableWidth_ - bujs.game_.renderer_.consts_.tableWidthTrans_ + bujs.game_.renderer_.consts_.laneWidth_ - bujs.game_.renderer_.consts_.chanceDist_ + bujs.game_.renderer_.consts_.arrowLaneOfs_;
+        }
+        else {
+            xOfs = bujs.game_.renderer_.config_.canvasWidth_ - (bujs.game_.renderer_.consts_.tableWidth_ - bujs.game_.renderer_.consts_.chanceDist_ + bujs.game_.renderer_.consts_.laneWidth_ - bujs.game_.renderer_.consts_.arrowLaneOfs_ + bujs.game_.renderer_.sprites_.a1_[0].width + 3);	// 3 is a little weird here.
+            xOfsBeat = xOfsBeat + bujs.game_.renderer_.config_.canvasWidth_ - (bujs.game_.renderer_.consts_.tableWidth_ - bujs.game_.renderer_.consts_.tableWidthTrans_ + bujs.game_.renderer_.consts_.laneWidth_ - bujs.game_.renderer_.consts_.chanceDist_ + bujs.game_.renderer_.consts_.arrowLaneOfs_ + bujs.game_.renderer_.sprites_.a1_[0].width + 1);
+        }
+        yOfsBeat = yOfs + bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.sprites_.a1_[0].height / 2 - bujs.game_.renderer_.sprites_.beatDown_[0].height / 2;
+        yOfs = yOfs + bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.sprites_.a1_[0].height / 2 - bujs.game_.renderer_.sprites_.laneDown_[0].height / 2;
+
+        // lane
+        bujs.game_.animations_.push(new BUJS.Animation_(bujs.game_.renderer_, bujs.game_.music_.getCurrTime_(), bujs.game_.renderer_.consts_.arrowAnimationTime_, bujs.game_.renderer_.sprites_.laneDown_[spriteLaneIndex], xOfs, yOfs));
+
+        // beat
+        bujs.game_.animations_.push(new BUJS.Animation_(bujs.game_.renderer_, bujs.game_.music_.getCurrTime_(), bujs.game_.renderer_.consts_.arrowAnimationTime_, bujs.game_.renderer_.sprites_.beatDown_[spriteLaneIndex], xOfsBeat, yOfsBeat));
+    }
+
+    // space down
+    if (keyMap === 5) {
+        bujs.game_.animations_.push(new BUJS.Animation_(bujs.game_.renderer_, bujs.game_.music_.getCurrTime_(),
+            bujs.game_.renderer_.consts_.arrowAnimationTime_,
+            bujs.game_.renderer_.sprites_.spaceFrameExplode_[0],
+            (bujs.game_.renderer_.config_.canvasWidth_ - bujs.game_.renderer_.sprites_.spaceFrameExplode_[0].width) / 2,
+            bujs.game_.renderer_.config_.canvasHeight_ - bujs.game_.renderer_.consts_.spaceMarginBottom_ - bujs.game_.renderer_.sprites_.spaceFrameExplode_[0].height / 2));
+    }
+
+    bujs.game_.processNoteResult_(keyMap);
+};
+
+BUJS.Input_.prototype.touchStart_ = function (e) {
+    e.preventDefault();
+    var _this = this;
+    var el = e.changedTouches[0].target,
+        elLeft = el.offsetLeft,
+        elTop = el.offsetTop,
+        arrowSprite = bujs.game_.renderer_.sprites_.a7_[0],
+        spaceFrameSprite = bujs.game_.renderer_.sprites_.spaceFrame_[0],
+        logoSprite = bujs.game_.renderer_.sprites_.dnxpLogo_[0];
+    var leftPerfectX = bujs.game_.renderer_.consts_.tableWidth_ - bujs.game_.renderer_.consts_.tableWidthTrans_ +
+                        bujs.game_.renderer_.consts_.laneWidth_ - bujs.game_.renderer_.consts_.chanceDist_ +
+                        bujs.game_.renderer_.consts_.arrowLaneOfs_;
+    var rightPerfectX = bujs.game_.renderer_.config_.canvasWidth_ -
+                        (bujs.game_.renderer_.consts_.tableWidth_ - bujs.game_.renderer_.consts_.tableWidthTrans_ +
+                            bujs.game_.renderer_.consts_.laneWidth_ - bujs.game_.renderer_.consts_.chanceDist_ +
+                            bujs.game_.renderer_.consts_.arrowLaneOfs_ + arrowSprite.width);
+    var spaceLeft = (bujs.game_.renderer_.config_.canvasWidth_ - spaceFrameSprite.width) / 2,
+        spaceTop = bujs.game_.renderer_.config_.canvasHeight_ - bujs.game_.renderer_.consts_.spaceMarginBottom_ - spaceFrameSprite.height / 2;
+
+    for (var i = 0; i < e.changedTouches.length; i++) {
+        var touch = e.changedTouches[i],
+            touchLeft = touch.pageX - elLeft,
+            touchTop = touch.pageY - elTop;
+        var key = 0;
+
+        var row = 0;
+        if (touchTop >= bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.consts_.lane1Yofs_ &&
+            touchTop <= bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.consts_.lane1Yofs_ + arrowSprite.height) {
+            row = 1;
+        }
+        if (touchTop >= bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.consts_.lane2Yofs_ &&
+            touchTop <= bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.consts_.lane2Yofs_ + arrowSprite.height) {
+            row = 2;
+        }
+        if (touchTop >= bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.consts_.lane3Yofs_ &&
+            touchTop <= bujs.game_.renderer_.consts_.laneYStart_ + bujs.game_.renderer_.consts_.lane3Yofs_ + arrowSprite.height) {
+            row = 3;
+        }
+
+        var leftRight = 0;
+        if ((touchLeft >= leftPerfectX &&
+             touchLeft <= leftPerfectX + arrowSprite.width) ||
+            (touchLeft >= 0 &&
+             touchLeft <= bujs.game_.renderer_.sprites_.tableL_[0].width)) {
+            leftRight = 1;
+        }
+        if ((touchLeft >= rightPerfectX &&
+             touchLeft <= rightPerfectX + arrowSprite.width) ||
+            (touchLeft >= bujs.game_.renderer_.config_.canvasWidth_ - bujs.game_.renderer_.sprites_.tableR_[0].width &&
+             touchLeft <= bujs.game_.renderer_.config_.canvasWidth_)) {
+            leftRight = 2;
+        }
+
+        if (row === 1 && leftRight === 1) key = 7;
+        else if (row === 2 && leftRight === 1) key = 4;
+        else if (row === 3 && leftRight === 1) key = 1;
+        else if (row === 1 && leftRight === 2) key = 9;
+        else if (row === 2 && leftRight === 2) key = 6;
+        else if (row === 3 && leftRight === 2) key = 3;
+
+        if (touchLeft >= spaceLeft && touchLeft <= spaceLeft + spaceFrameSprite.width &&
+            touchTop >= spaceTop && touchTop <= spaceTop + spaceFrameSprite.height) {
+            key = 5;
+        }
+
+        if (touchLeft >= 0 && touchLeft <= logoSprite.width &&
+            touchTop >= bujs.game_.renderer_.config_.canvasHeight_ - logoSprite.height && touchTop <= bujs.game_.renderer_.config_.canvasHeight_) {
+            key = 5;
+        }
+
+        if (touchLeft >= bujs.game_.renderer_.config_.canvasWidth_ - logoSprite.width && touchLeft <= bujs.game_.renderer_.config_.canvasWidth_ &&
+            touchTop >= bujs.game_.renderer_.config_.canvasHeight_ - logoSprite.height && touchTop <= bujs.game_.renderer_.config_.canvasHeight_) {
+            key = 5;
+        }
+
+
+        if (key !== 0) {
+            _this.keyDown_(key);
+        }
+    }
+
+};
+
+BUJS.Input_.prototype.touchEnd_ = function (e) {
+    var _music = bujs.game_.music_;
+    // TODO: BUM thingies...
+    if (typeof _music.musicStartTime_ === 'undefined' || _music.musicStartTime_ === null) {
+        _music.context_.decodeAudioData(_music.response_.slice(0), function (buffer) {
+            _music.musicSource_ = _music.loadSound_(buffer);
+            _music.musicStartTime_ = _music.context_.currentTime;
+            _music.musicSource_.start(0);
+            if (typeof _music.onComponentFinishLoading_ !== 'undefined') {
+                _music.onComponentFinishLoading_.call(bujs.game_, _music);
+            }
+        }, function (error) {
+            console.error("Error decoding audio data", error);
+        });
+    }
+};;/**
+ * A simple animation interpolation utility
+ */
+BUJS.Animation_ = function (renderer, startTime, duration, sprite, x, y) {
+    this.renderer_ = renderer;
+    this.startTime_ = startTime;
+    this.duration_ = duration || bujs.game_.renderer_.consts_.arrowAnimationTime_;
+    this.sprite_ = sprite || null;
+    this.x_ = x || 0;
+    this.y_ = y || 0;
 }
-,
-BUJS.R.prototype.D = function() {
-    var s = this;
-    s.ba(s.A.z[0], s.P.H - s.A.z[0].width - s.Rs.qs, s.P.X - s.A.z[0].height - s.Rs.qs),
-    s.ba(s.A.K[0], 0, s.Rs.Fs),
-    s.ba(s.A.Q[0], s.Rs.Is - s.Rs.Hs - s.Rs.Ms, s.Rs.Fs),
-    s.ba(s.A.V[0], s.A.Q[0].pos.x + s.Rs.Es, s.Rs.Fs),
-    s.ba(s.A.Z[0], s.P.H - s.Rs.Is, s.Rs.Fs),
-    s.ba(s.A.ss[0], s.P.H - s.Rs.Is + s.Rs.Hs - s.Rs.Es + s.Rs.Ms, s.Rs.Fs),
-    s.ba(s.A.as[0], s.P.H - s.Rs.Is + s.Rs.Hs - s.Rs.Es - s.A.as[0].width + s.Rs.Ms, s.Rs.Fs),
-    s.ba(s.A.ns[0], (s.P.H - s.A.ns[0].width) / 2, s.P.X - s.Rs.Ws - s.A.ns[0].height / 2),
-    s.ba(s.A.ws[0], s.P.H / 2 + s.A.ns[0].width / 2, s.P.X - s.Rs.Ws - s.A.ws[0].height / 2),
-    s.ba(s.A.ws[1], s.P.H / 2 + s.A.ns[0].width / 2, s.P.X - s.Rs.Ws - s.A.ws[1].height / 2),
-    s.ba(s.A.Ss[0], s.P.H / 2 - s.A.ns[0].width / 2 - s.A.Ss[0].width, s.P.X - s.Rs.Ws - s.A.Ss[0].height / 2),
-    s.ba(s.A.Ss[1], s.P.H / 2 - s.A.ns[0].width / 2 - s.A.Ss[1].width, s.P.X - s.Rs.Ws - s.A.Ss[1].height / 2),
-    s.ba(s.A.Ss[2], s.P.H / 2 - s.A.ns[0].width / 2 - s.A.Ss[2].width, s.P.X - s.Rs.Ws - s.A.Ss[2].height / 2),
-    s.ba(s.A.Ss[3], s.P.H / 2 - s.A.ns[0].width / 2 - s.A.Ss[3].width, s.P.X - s.Rs.Ws - s.A.Ss[3].height / 2),
-    s.ba(s.A.hs[0], (s.P.H - s.A.ns[0].width) / 2, s.P.X - s.Rs.Ws - s.A.ns[0].height / 2),
-    s.ba(s.A.vs[0], (s.P.H - s.A.ns[0].width) / 2, s.P.X - s.Rs.Ws - s.A.ns[0].height / 2);
-    for (var a = 0; a < 6; a++)
-        s.ba(s.A.gs[a], s.P.H / 2 - s.Rs.Xs / 2 * (5 - 2 * a) - s.A.gs[0].width / 2, s.P.X - s.Rs.Ws - s.A.gs[0].height / 2);
-    var n = s.P.H - s.A.rs[0].width;
-    s.ba(s.A.Js[0], 0, s.Rs.Fs + s.Rs.Ys),
-    s.ba(s.A.Ls[0], n, s.Rs.Fs + s.Rs.Ys),
-    s.ba(s.A.ms[0], 0, s.Rs.Fs + s.Rs.As),
-    s.ba(s.A.ys[0], n, s.Rs.Fs + s.Rs.As),
-    s.ba(s.A.ks[0], 0, s.Rs.Fs + s.Rs.Gs),
-    s.ba(s.A.xs[0], n, s.Rs.Fs + s.Rs.Gs)
+
+/**
+ * We can apply different interpolation algorithms here.
+ * For now it's linear interpolation
+ */
+BUJS.Animation_.prototype.interpolate_ = function (currTime) {
+    var _this = this;
+    var alpha = 1 - (currTime - _this.startTime_) / _this.duration_;
+    return alpha;
+};
+
+/**
+ * Process a predefined animation
+ */
+BUJS.Animation_.prototype.process_ = function (currTime) {
+    var _this = this;
+    if (_this.sprite_ == null) return;
+    if (_this.startTime_ + _this.duration_ > currTime) {
+        if (_this.startTime_ <= currTime) {
+            // equivalent to setSpritePos_()
+            _this.sprite_.pos = {x: _this.x_, y: _this.y_};
+            _this.renderer_.ctx_.globalAlpha = _this.interpolate_(currTime);
+            _this.renderer_.drawSprite_(_this.sprite_);
+            _this.renderer_.ctx_.globalAlpha = 1;
+        }
+    }
+    else {
+        _this.startTime_ = -1;
+    }
+};;BUJS.Game_ = function (songId) {
+    var _this = this;
+    this.songId_ = songId;
+    this.loadedComponent_ = [];
+
+    this.frameCount_ = 0;
+    this.fps_ = 0;
+
+    this.firstAvailNote_ = 0;
+    this.lastNoteResult_ = 0;
+    this.lastNoteTime_ = 0;
+    this.lastTime_ = 0;
+
+    this.pgcbm_ = [0, 0, 0, 0, 0];
+    this.score_ = 0;
+    this.perx_ = 0;
+    this.combo_ = 0;
+    this.xmax_ = 0;
+    this.chance_ = 0;
+
+    this.showBg_ = 0;
+    this.showPerfArrows_ = false;
+    this.showHelp_ = false;
+
+    this.numSelect_ = 0;
+    this.animations_ = [];
+    this.players_ = [];
+
+    this.autoplay_ = false;
+    this.alwaysCorrect_ = false;
+
+    this.noteScores_ = [480, 240, 120, 60, 0];
+    this.spaceScore_ = 2000;
+    this.yellowBeatupRatio_ = 1.2;
+    this.blueBeatupRatio_ = 1.44;
+
+
+    // load music and renderer
+    setTimeout(function () {
+        _this.music_ = new BUJS.Music_(_this.onComponentFinishLoading_);
+    }, 0);
+
+    this.renderer_ = new BUJS.Renderer_(this.onComponentFinishLoading_);
+    this.renderer_.asyncLoadSprites_();
+    this.input_ = new BUJS.Input_();
+};
+
+/**
+ * Callback whenever we have a component finished loading
+ */
+BUJS.Game_.prototype.onComponentFinishLoading_ = function (component) {
+    var _this = this;
+    if (typeof component !== "undefined") {
+        var componentType = component.constructor.name;
+        console.log("Component finished loading", componentType);
+        if (_this.loadedComponent_.indexOf(component) < 0) {
+            _this.loadedComponent_.push(componentType);
+        }
+        if (_this.loadedComponent_.length === 2) {     // renderer & music
+            // initialize remaining animation parameters
+            _this.onFinishLoading_();
+        }
+    }
+};
+
+/**
+ * Callback whenever we have ALL components finished loading
+ */
+BUJS.Game_.prototype.onFinishLoading_ = function () {
+    gl_();
+};
+
+function gl_() {
+    bujs.game_.loop_();
 }
-,
-BUJS.R.prototype.pa = function(s, a, n, e, t) {
-    var u = this
-      , i = 0
-      , c = u.Rs.Fs + n
-      , r = bujs.a.ja.L();
-    (i = e ? a + u.Rs.Is - u.Rs.Hs + u.Rs.Es - u.Rs.Ms + u.Rs.Ps - 40 * (t - r - 0) / bujs.a.ja.h : u.P.H - (a + u.Rs.Is - u.Rs.Hs + u.Rs.Es - u.Rs.Ms + u.Rs.Ps + s.width) + 40 * (t - r - 0) / bujs.a.ja.h) > u.P.H - u.Rs.Is || i + s.width < u.Rs.Is || (u.ba(s, i, c),
-    u.ta(s))
-}
-,
-BUJS.R.prototype.fa = function() {
-    var s = this;
-    s.pa(s.A.rs[0], 1, s.Rs.Ys, !0, bujs.a.ja.L()),
-    s.pa(s.A.ps[0], 1, s.Rs.Ys, !1, bujs.a.ja.L()),
-    s.pa(s.A.bs[0], 1 + s.Rs.Ds, s.Rs.As, !0, bujs.a.ja.L()),
-    s.pa(s.A.js[0], 1 + s.Rs.Ds, s.Rs.As, !1, bujs.a.ja.L()),
-    s.pa(s.A.os[0], 1, s.Rs.Gs, !0, bujs.a.ja.L()),
-    s.pa(s.A.fs[0], 1, s.Rs.Gs, !1, bujs.a.ja.L())
-}
-,
-BUJS.R.prototype.ga = function(s) {
-    var a = this
-      , n = Math.min(bujs.a.la + a.Rs.Cs, bujs.a.ja.g._.length);
-    if (bujs.a.la >= 0)
-        for (var e = bujs.a.ja.h, t = bujs.a.la; t < n; t++) {
-            var u = bujs.a.ja.g._[t]
-              , i = u.t
-              , c = u.n
-              , r = s + e * (a.Rs.Cs + 1)
-              , b = s + 8 * e;
-            if (5 !== c && i > r || 5 === c && i > b)
+
+/**
+ * Main game loop
+ */
+BUJS.Game_.prototype.loop_ = function () {
+    var _this = this;
+    _this.update_();
+    _this.draw_();
+    if (_this.music_.context_ !== null) {
+        window.requestAnimationFrame(gl_);
+    }
+};
+
+/**
+ * Draw the whole scene
+ */
+BUJS.Game_.prototype.draw_ = function () {
+    var _this = this;
+    _this.renderer_.clear_();
+
+    if (bujs.game_.showBg_ !== 0) {
+        _this.renderer_.drawSprite_(_this.sprites_.background_[bujs.game_.showBg_ - 1]);
+    }
+
+    if (typeof _this.music_.musicStartTime_ === 'undefined' || _this.music_.musicStartTime_ === null) {
+        bujs.showLoadingMsg_("Touch/click to start music");
+    }
+
+    // fps
+    var fps = _this.calcFps_();
+    var posFps = {x: 5, y: 15};
+    _this.renderer_.writeText_(posFps, fps.toFixed(1));
+    _this.renderer_.writeText_({x: 5, y: _this.renderer_.config_.canvasHeight_ - 5}, _this.music_.getCurrTime_().toFixed(2));
+
+    // song name
+    _this.renderer_.writeText_({x: 5, y: _this.renderer_.config_.canvasHeight_ - 5 - 16}, _this.music_.songInfo_.name + " - " + _this.music_.songInfo_.singer + " [" + _this.music_.songInfo_.bpm.toFixed(1) + " bpm]");
+
+    // lanes, landings, icons, logo, space frame...
+    _this.renderer_.drawFixContent_(_this.combo_);
+    _this.renderer_.drawBeatupText_(_this.combo_);
+
+    if (_this.showPerfArrows_) {
+        _this.renderer_.drawPerfectArrows_();
+    }
+    _this.processAnimations_();
+    _this.renderer_.drawNotes_(_this.music_.getCurrTime_());
+    _this.renderer_.drawBigNoteResultText_();
+
+    _this.checkMiss_();
+
+    _this.renderer_.drawTable_();
+    _this.renderer_.drawTouchArrows_();
+};
+
+/**
+ * Update game status
+ */
+BUJS.Game_.prototype.update_ = function () {
+    var _this = this;
+
+};
+
+/**
+ * Calculate frame per sec, not from beginning but for each sec
+ */
+BUJS.Game_.prototype.calcFps_ = function () {
+    var _this = this;
+    var currTime = _this.music_.getCurrTime_();
+    _this.frameCount_ ++;
+    if (_this.lastTime_ === 0) {
+        _this.lastTime_ = currTime;
+    }
+    if (currTime > _this.lastTime_ + 1000) {
+        _this.fps_ = _this.frameCount_ / (currTime - _this.lastTime_) * 1000;
+        _this.lastTime_ = currTime;
+        _this.frameCount_ = 0;
+    }
+    return _this.fps_;
+};
+
+BUJS.Game_.prototype.checkMiss_ = function () {
+    var _this = this;
+    var currTime = _this.music_.getCurrTime_();
+    var maxNotes = Math.min(_this.firstAvailNote_ + _this.renderer_.consts_.numNotes_, _this.music_.songInfo_.notes_.length);
+    if (_this.autoplay_) {
+        if (_this.firstAvailNote_ >= 0) {
+            // still have notes
+            for (var i = _this.firstAvailNote_; i < maxNotes; i++) {
+                if (_this.music_.songInfo_.notes_[i].t < currTime + 5) {
+                    _this.input_.keyDown_(_this.music_.songInfo_.notes_[i].n);
+                    //processKeyboard(true, 0, -1);
+
+                    break;
+                }
+            }
+        }
+    }
+    else {
+        // check for misses
+        if (_this.firstAvailNote_ >= 0) {
+            // still have notes
+            for (i = _this.firstAvailNote_; i < maxNotes; i++) {
+                if (currTime > _this.music_.songInfo_.notes_[i].t + _this.music_.tickTime_ * 2) {
+                    _this.music_.songInfo_.notes_[i].pressed_ = true;
+                    _this.lastNoteResult_ = 4;		// 'missed' for the animation
+                    _this.lastNoteTime_ = currTime;
+                    _this.music_.playSound_(_this.music_.sounds_.miss_);
+                    _this.updateScore_(_this.music_.songInfo_.notes_[i].n, 4);
+                }
+            }
+        }
+
+        // recalculate first_avail_note
+        _this.firstAvailNote_ = -1;
+        for (var j = 0; j < _this.music_.songInfo_.notes_.length; j++) {
+            if (!_this.music_.songInfo_.notes_[j].pressed_) {
+                _this.firstAvailNote_ = j;
                 break;
-            if (!u._a) {
-                var o = 0
-                  , p = !0
-                  , j = 0
-                  , f = null
-                  , g = s - i;
-                if (g < 0 && (g = -g),
-                o = Math.round(g / e) % 4,
-                0 === bujs.a.ha)
-                    switch (c) {
-                    case 7:
-                        f = a.A.rs[o],
-                        j = a.Rs.Ys;
-                        break;
-                    case 4:
-                        f = a.A.bs[o],
-                        j = a.Rs.As;
-                        break;
-                    case 1:
-                        f = a.A.os[o],
-                        j = a.Rs.Gs;
-                        break;
-                    case 9:
-                        p = !1,
-                        f = a.A.ps[o],
-                        j = a.Rs.Ys;
-                        break;
-                    case 6:
-                        p = !1,
-                        f = a.A.js[o],
-                        j = a.Rs.As;
-                        break;
-                    case 3:
-                        p = !1,
-                        f = a.A.fs[o],
-                        j = a.Rs.Gs
+            }
+        }
+    }
+};
+
+BUJS.Game_.prototype.processNoteResult_ = function (keyMap) {
+    var _this = this;
+    var noteResult = -1;
+    if (keyMap !== 0 || _this.autoplay_) {
+        var currTime = _this.music_.getCurrTime_();
+        for (var i = _this.firstAvailNote_; i < _this.firstAvailNote_ + 4; i++) {
+            if (_this.firstAvailNote_ >= _this.music_.songInfo_.notes_.length || _this.firstAvailNote_ < 0) break;
+            var note = _this.music_.songInfo_.notes_[i];
+            var noteKey = note.n;
+            var keyTime = currTime - note.t;
+
+            if (noteKey === keyMap || _this.autoplay_ || _this.alwaysCorrect_) {
+                noteResult = _this.getKeyResult_(keyTime);
+                if (noteKey === 5) {
+                    _this.animations_.push(new BUJS.Animation_(_this.renderer_, currTime, _this.renderer_.consts_.arrowAnimationTime_, _this.renderer_.sprites_.spaceFrameExplode_[0],
+                        (_this.renderer_.config_.canvasWidth_ - _this.renderer_.sprites_.spaceFrameExplode_[0].width) / 2,
+                        _this.renderer_.config_.canvasHeight_ - _this.renderer_.consts_.spaceMarginBottom_ - _this.renderer_.sprites_.spaceFrameExplode_[0].height / 2));
+                }
+                // not an "outside" key? a correct key?
+                if (noteResult >= 0 || _this.autoplay_) {
+                    switch (noteKey){
+                        case 5 : _this.animations_.push(new BUJS.Animation_(_this.renderer_, currTime, _this.renderer_.consts_.arrowAnimationTime_, _this.renderer_.sprites_.spaceExplode_[0],
+                            (_this.renderer_.config_.canvasWidth_ - _this.renderer_.sprites_.spaceExplode_[0].width) / 2,
+                            _this.renderer_.config_.canvasHeight_ - _this.renderer_.consts_.spaceMarginBottom_ - _this.renderer_.sprites_.spaceExplode_[0].height / 2));
+                            break;
                     }
-                if (1 === bujs.a.ha)
-                    switch (c) {
-                    case 7:
-                        f = a.A.rs[o],
-                        j = a.Rs.As;
-                        break;
-                    case 4:
-                        f = a.A.bs[o],
-                        j = a.Rs.As;
-                        break;
-                    case 1:
-                        f = a.A.os[o],
-                        j = a.Rs.As;
-                        break;
-                    case 9:
-                        p = !1,
-                        f = a.A.ps[o],
-                        j = a.Rs.As;
-                        break;
-                    case 6:
-                        p = !1,
-                        f = a.A.js[o],
-                        j = a.Rs.As;
-                        break;
-                    case 3:
-                        p = !1,
-                        f = a.A.fs[o],
-                        j = a.Rs.As
+                    if (noteResult !== 4) {
+                        if (noteKey !== 5) {
+                            var leftLane = true;
+                            var yOfs = 0;
+
+                            // appropriate image surface, y offset
+                            switch (noteKey) {
+                                case 7 : yOfs = _this.renderer_.consts_.lane1Yofs_; break;
+                                case 4 : yOfs = _this.renderer_.consts_.lane2Yofs_; break;
+                                case 1 : yOfs = _this.renderer_.consts_.lane3Yofs_; break;
+                                case 9 : leftLane = false; yOfs = _this.renderer_.consts_.lane1Yofs_; break;
+                                case 6 : leftLane = false; yOfs = _this.renderer_.consts_.lane2Yofs_; break;
+                                case 3 : leftLane = false; yOfs = _this.renderer_.consts_.lane3Yofs_; break;
+                            }
+                            yOfs = _this.renderer_.consts_.laneYStart_ + yOfs + _this.renderer_.sprites_.a1_[0].height / 2;
+                            if (leftLane)
+                                _this.animations_.push(new BUJS.Animation_(_this.renderer_, currTime, _this.renderer_.consts_.arrowAnimationTime_, _this.renderer_.sprites_.arrowExplode_[0],
+                                    _this.renderer_.consts_.tableWidth_ - _this.renderer_.consts_.tableWidthTrans_ + _this.renderer_.consts_.laneWidth_ - _this.renderer_.consts_.chanceDist_ + _this.renderer_.consts_.arrowLaneOfs_ + _this.renderer_.sprites_.a1_[0].width / 2 - _this.renderer_.sprites_.arrowExplode_[0].width / 2,
+                                    yOfs - _this.renderer_.sprites_.arrowExplode_[0].width / 2));
+                            else
+                                _this.animations_.push(new BUJS.Animation_(_this.renderer_, currTime, _this.renderer_.consts_.arrowAnimationTime_, _this.renderer_.sprites_.arrowExplode_[0],
+                                    _this.renderer_.config_.canvasWidth_ - (_this.renderer_.consts_.tableWidth_ - _this.renderer_.consts_.tableWidthTrans_ + _this.renderer_.consts_.laneWidth_ - _this.renderer_.consts_.chanceDist_ + _this.renderer_.consts_.arrowLaneOfs_ + _this.renderer_.sprites_.a1_[0].width / 2) - _this.renderer_.sprites_.arrowExplode_[0].width / 2,
+                                    yOfs - _this.renderer_.sprites_.arrowExplode_[0].height / 2));
+                        }
                     }
-                if (2 === bujs.a.ha)
-                    switch (c) {
-                    case 7:
-                        f = a.A.rs[o],
-                        j = a.Rs.Gs;
-                        break;
-                    case 4:
-                        f = a.A.bs[o],
-                        j = a.Rs.As;
-                        break;
-                    case 1:
-                        f = a.A.os[o],
-                        j = a.Rs.Ys;
-                        break;
-                    case 9:
-                        p = !1,
-                        f = a.A.ps[o],
-                        j = a.Rs.Gs;
-                        break;
-                    case 6:
-                        p = !1,
-                        f = a.A.js[o],
-                        j = a.Rs.As;
-                        break;
-                    case 3:
-                        p = !1,
-                        f = a.A.fs[o],
-                        j = a.Rs.Ys
+
+                    // sound
+                    if (noteKey === 5) _this.music_.playSound_(_this.music_.sounds_.space_);
+                    else if (noteResult === 0) _this.music_.playSound_(_this.music_.sounds_.perfect_);  // arrow per?
+                    else if (noteResult === 4) _this.music_.playSound_(_this.music_.sounds_.miss_);     // arrow miss?
+                    else _this.music_.playSound_(_this.music_.sounds_.normal_);                         // arrow normal
+
+                    // update pgcbm, score, combo, perx... and send to server if it's a space
+                    _this.updateScore_(noteKey, noteResult);
+
+                    // mark it as pressed
+                    note.pressed_ = true;
+
+                    // recalculate first_avail_note
+                    _this.firstAvailNote_ = -1;
+                    for (var j = 0; j < _this.music_.songInfo_.notes_.length; j++) {
+                        if (typeof _this.music_.songInfo_.notes_[j].pressed_ === "undefined" || !_this.music_.songInfo_.notes_[j].pressed_) {
+                            _this.firstAvailNote_ = j;
+                            break;
+                        }
                     }
-                if (null !== f)
-                    a.pa(f, 0, j, p, i);
-                else if (5 === c) {
-                    var l = (a.P.H - a.A.es[0].width) / 2 - (i - s) / e * 31 / 2
-                      , _ = (a.P.H - a.A.es[0].width) / 2 + (i - s) / e * 31 / 2
-                      , h = a.P.X - a.Rs.Ws - a.A.es[0].height / 2;
-                    a.ba(a.A.es[0], l, h),
-                    a.ta(a.A.es[0]),
-                    a.ba(a.A.es[0], _, h),
-                    a.ta(a.A.es[0])
+
+                    // save note result for p/g/c/b/m animation
+                    _this.lastNoteResult_ = noteResult;
+                    _this.lastNoteTime_ = currTime;
+
+                    // that's enough. found a note. break.
+                    break;
                 }
             }
         }
-}
-,
-BUJS.R.prototype.va = function() {
-    var s = this;
-    if (bujs.a.Ua > 0) {
-        var a = bujs.a.ja.L() - bujs.a.Ua
-          , n = s.A.ds[bujs.a.Ba]
-          , e = 1;
-        a < 50 && (e = 1 + (50 - a) / 90),
-        s.ba(n, (s.P.H - n.width * e) / 2, (s.Rs.Ts - n.height * e) / 2),
-        s.ta(n, e),
-        a > 200 && (bujs.a.Ba = 0,
-        bujs.a.Ua = 0)
     }
-}
-,
-BUJS.da = function() {
-    var s = this;
-    $("body")[0].onkeydown = function(a) {
-        var n = a.keyCode;
-        s.wa(n)
+};
+
+/**
+ * Convert time diff to key result p/g/c/b/m
+ */
+BUJS.Game_.prototype.getKeyResult_ = function (diff) {
+    var _this = this;
+    if (_this.autoplay_) return 0;
+    var ratio = 4;
+    var tickTime = _this.music_.tickTime_;
+    if (diff > 80 * (tickTime * ratio) / 100 || diff < -tickTime * ratio) return -1;	// don't process
+    if (diff < 0) {
+        diff = -diff;
     }
-    ;
-    var a = document.getElementsByTagName("canvas")[0];
-    a.addEventListener("touchstart", function(a) {
-        s.Sa(a)
-    }, !1),
-    bujs.d && a.addEventListener("touchend", function(a) {
-        s.Ja(a)
-    }, !1)
-}
-,
-BUJS.da.prototype.wa = function(s) {
-    var a = this;
-    switch (s) {
-    case 112:
-        bujs.a.ma = !bujs.a.ma;
-        break;
-    case 113:
-        break;
-    case 114:
-        bujs.a.ha = (bujs.a.ha + 1) % 3;
-        break;
-    case 115:
-        bujs.a.ka = (bujs.a.ka + 1) % (bujs.a.La.A.N.length + 1);
-        break;
-    case 16:
-        bujs.a.ya = !bujs.a.ya;
-        break;
-    case 93:
-        bujs.a.xa = !bujs.a.xa;
-    case 55:
-    case 82:
-    case 69:
-    case 103:
-    case 36:
-        bujs.a.xa || a.Ra(7);
-        break;
-    case 52:
-    case 70:
-    case 100:
-    case 37:
-        bujs.a.xa || a.Ra(4);
-        break;
-    case 49:
-    case 86:
-    case 97:
-    case 35:
-        bujs.a.xa || a.Ra(1);
-        break;
-    case 57:
-    case 73:
-    case 105:
-    case 33:
-        bujs.a.xa || a.Ra(9);
-        break;
-    case 54:
-    case 75:
-    case 74:
-    case 102:
-    case 39:
-        bujs.a.xa || a.Ra(6);
-        break;
-    case 51:
-    case 77:
-    case 78:
-    case 99:
-    case 34:
-        bujs.a.xa || a.Ra(3);
-        break;
-    case 48:
-    case 53:
-    case 32:
-    case 96:
-    case 101:
-        bujs.a.xa || a.Ra(5)
+    if (diff <= 5 * (tickTime * ratio) / 100) return 0;		// p
+    if (diff <= 15 * (tickTime * ratio) / 100) return 1;	// g
+    if (diff <= 27 * (tickTime * ratio) / 100) return 2;	// c
+    if (diff <= 40 * (tickTime * ratio) / 100) return 3;	// b
+    return 4;												// m
+};
+
+/**
+ * Process all on-going animations
+ */
+BUJS.Game_.prototype.processAnimations_ = function () {
+    var _this = this;
+    for (var i = 0; i < _this.animations_.length; i++) {
+        _this.animations_[i].process_(_this.music_.getCurrTime_());
     }
-}
-,
-BUJS.da.prototype.Ra = function(s) {
-    var a = !0
-      , n = -1
-      , e = 0
-      , t = 0
-      , u = 0
-      , i = 0;
-    switch (s) {
-    case 7:
-        n = 0,
-        u = bujs.a.La.Rs.Ys;
-        break;
-    case 4:
-        n = 1,
-        t = 6,
-        u = bujs.a.La.Rs.As;
-        break;
-    case 1:
-        n = 2,
-        u = bujs.a.La.Rs.Gs;
-        break;
-    case 9:
-        n = 3,
-        a = !1,
-        u = bujs.a.La.Rs.Ys;
-        break;
-    case 6:
-        n = 4,
-        a = !1,
-        t = -5,
-        u = bujs.a.La.Rs.As;
-        break;
-    case 3:
-        n = 5,
-        a = !1,
-        u = bujs.a.La.Rs.Gs
-    }
-    n >= 0 && (a ? (e = bujs.a.La.Rs.Is - bujs.a.La.Rs.Hs - bujs.a.La.Rs.Ms - bujs.a.La.Rs.Ps,
-    t = t + bujs.a.La.Rs.Is - bujs.a.La.Rs.Hs + bujs.a.La.Rs.Es - bujs.a.La.Rs.Ms + bujs.a.La.Rs.Ps) : (e = bujs.a.La.P.H - (bujs.a.La.Rs.Is - bujs.a.La.Rs.Ms + bujs.a.La.Rs.Es - bujs.a.La.Rs.Ps + bujs.a.La.A.os[0].width + 3),
-    t = t + bujs.a.La.P.H - (bujs.a.La.Rs.Is - bujs.a.La.Rs.Hs + bujs.a.La.Rs.Es - bujs.a.La.Rs.Ms + bujs.a.La.Rs.Ps + bujs.a.La.A.os[0].width + 1)),
-    i = u + bujs.a.La.Rs.Fs + bujs.a.La.A.os[0].height / 2 - bujs.a.La.A.O[0].height / 2,
-    u = u + bujs.a.La.Rs.Fs + bujs.a.La.A.os[0].height / 2 - bujs.a.La.A.C[0].height / 2,
-    bujs.a.Ma.push(new BUJS.Ta(bujs.a.La,bujs.a.ja.L(),bujs.a.La.Rs.$s,bujs.a.La.A.C[n],e,u)),
-    bujs.a.Ma.push(new BUJS.Ta(bujs.a.La,bujs.a.ja.L(),bujs.a.La.Rs.$s,bujs.a.La.A.O[n],t,i))),
-    5 === s && bujs.a.Ma.push(new BUJS.Ta(bujs.a.La,bujs.a.ja.L(),bujs.a.La.Rs.$s,bujs.a.La.A.ts[0],(bujs.a.La.P.H - bujs.a.La.A.ts[0].width) / 2,bujs.a.La.P.X - bujs.a.La.Rs.Ws - bujs.a.La.A.ts[0].height / 2)),
-    bujs.a.$a(s)
-}
-,
-BUJS.da.prototype.Sa = function(s) {
-    s.preventDefault();
-    for (var a = this, n = s.changedTouches[0].target, e = n.offsetLeft, t = n.offsetTop, u = bujs.a.La.A.rs[0], i = bujs.a.La.A.ns[0], c = bujs.a.La.A.z[0], r = bujs.a.La.Rs.Is - bujs.a.La.Rs.Hs + bujs.a.La.Rs.Es - bujs.a.La.Rs.Ms + bujs.a.La.Rs.Ps, b = bujs.a.La.P.H - (bujs.a.La.Rs.Is - bujs.a.La.Rs.Hs + bujs.a.La.Rs.Es - bujs.a.La.Rs.Ms + bujs.a.La.Rs.Ps + u.width), o = (bujs.a.La.P.H - i.width) / 2, p = bujs.a.La.P.X - bujs.a.La.Rs.Ws - i.height / 2, j = 0; j < s.changedTouches.length; j++) {
-        var f = s.changedTouches[j]
-          , g = f.pageX - e
-          , l = f.pageY - t
-          , _ = 0
-          , h = 0;
-        l >= bujs.a.La.Rs.Fs + bujs.a.La.Rs.Ys && l <= bujs.a.La.Rs.Fs + bujs.a.La.Rs.Ys + u.height && (h = 1),
-        l >= bujs.a.La.Rs.Fs + bujs.a.La.Rs.As && l <= bujs.a.La.Rs.Fs + bujs.a.La.Rs.As + u.height && (h = 2),
-        l >= bujs.a.La.Rs.Fs + bujs.a.La.Rs.Gs && l <= bujs.a.La.Rs.Fs + bujs.a.La.Rs.Gs + u.height && (h = 3);
-        var v = 0;
-        (g >= r && g <= r + u.width || g >= 0 && g <= bujs.a.La.A.K[0].width) && (v = 1),
-        (g >= b && g <= b + u.width || g >= bujs.a.La.P.H - bujs.a.La.A.Z[0].width && g <= bujs.a.La.P.H) && (v = 2),
-        1 === h && 1 === v ? _ = 7 : 2 === h && 1 === v ? _ = 4 : 3 === h && 1 === v ? _ = 1 : 1 === h && 2 === v ? _ = 9 : 2 === h && 2 === v ? _ = 6 : 3 === h && 2 === v && (_ = 3),
-        g >= o && g <= o + i.width && l >= p && l <= p + i.height && (_ = 5),
-        g >= 0 && g <= c.width && l >= bujs.a.La.P.X - c.height && l <= bujs.a.La.P.X && (_ = 5),
-        g >= bujs.a.La.P.H - c.width && g <= bujs.a.La.P.H && l >= bujs.a.La.P.X - c.height && l <= bujs.a.La.P.X && (_ = 5),
-        0 !== _ && a.Ra(_)
-    }
-}
-,
-BUJS.da.prototype.Ja = function(s) {
-    var a = bujs.a.ja;
-    void 0 !== a.m && null !== a.m || a.o.decodeAudioData(a.w.slice(0), function(s) {
-        a.S = a.J(s),
-        a.m = a.o.currentTime,
-        a.S.start(0),
-        void 0 !== a.p && a.p.call(bujs.a, a)
-    }, function(s) {})
-}
-,
-BUJS.Ta = function(s, a, n, e, t, u) {
-    this.La = s,
-    this.Fa = a,
-    this.Ya = n || bujs.a.La.Rs.$s,
-    this.Aa = e || null,
-    this.Ga = t || 0,
-    this.Da = u || 0
-}
-,
-BUJS.Ta.prototype.Ea = function(s) {
-    var a = this;
-    return 1 - (s - a.Fa) / a.Ya
-}
-,
-BUJS.Ta.prototype.Ia = function(s) {
-    var a = this;
-    null != a.Aa && (a.Fa + a.Ya > s ? a.Fa <= s && (a.Aa.pos = {
-        x: a.Ga,
-        y: a.Da
-    },
-    a.La.I.globalAlpha = a.Ea(s),
-    a.La.ta(a.Aa),
-    a.La.I.globalAlpha = 1) : a.Fa = -1)
-}
-,
-BUJS.Ha = function(s) {
-    var a = this;
-    this.f = s,
-    this.Pa = [],
-    this.Wa = 0,
-    this.Xa = 0,
-    this.la = 0,
-    this.Ba = 0,
-    this.Ua = 0,
-    this.qa = 0,
-    this.Na = [0, 0, 0, 0, 0],
-    this.za = 0,
-    this.Ca = 0,
-    this.Oa = 0,
-    this.Ka = 0,
-    this.Qa = 0,
-    this.ha = 0,
-    this.ka = 0,
-    this.ya = !1,
-    this.ma = !1,
-    this.Va = 0,
-    this.Ma = [],
-    this.Za = [],
-    this.xa = !1,
-    this.sn = !1,
-    this.an = [480, 240, 120, 60, 0],
-    this.nn = 2e3,
-    this.en = 1.2,
-    this.tn = 1.44,
-    setTimeout(function() {
-        a.ja = new BUJS.e(a.p)
-    }, 0),
-    this.La = new BUJS.R(this.p),
-    this.La.Y(),
-    this.un = new BUJS.da
-}
-,
-BUJS.Ha.prototype.p = function(s) {
-    var a = this;
-    if (void 0 !== s) {
-        var n = s.constructor.name;
-        a.Pa.indexOf(s) < 0 && a.Pa.push(n),
-        2 === a.Pa.length && a.in()
-    }
-}
-,
-BUJS.Ha.prototype.in = function() {
-    gl_()
-}
-,
-BUJS.Ha.prototype.s = function() {
-    var s = this;
-    s.cn(),
-    s.rn(),
-    null !== s.ja.o && window.requestAnimationFrame(gl_)
-}
-,
-BUJS.Ha.prototype.rn = function() {
-    var s = this;
-    s.La.na(),
-    0 !== bujs.a.ka && s.La.ta(s.A.N[bujs.a.ka - 1]),
-    void 0 !== s.ja.m && null !== s.ja.m || bujs.B("Touch/click to start music");
-    var a = s.bn()
-      , n = {
-        x: 5,
-        y: 15
-    };
-    s.La.ea(n, a.toFixed(1)),
-    s.La.ea({
-        x: 5,
-        y: s.La.P.X - 5
-    }, s.ja.L().toFixed(2)),
-    s.La.ua(s.Oa),
-    s.La.ra(s.Oa),
-    s.ya && s.La.fa(),
-    s.pn(),
-    s.La.ga(s.ja.L()),
-    s.La.va(),
-    s.jn(),
-    s.La.oa(),
-    s.La.ca()
-}
-,
-BUJS.Ha.prototype.cn = function() {}
-,
-BUJS.Ha.prototype.bn = function() {
-    var s = this
-      , a = s.ja.L();
-    return s.Wa++,
-    0 === s.qa && (s.qa = a),
-    a > s.qa + 1e3 && (s.Xa = s.Wa / (a - s.qa) * 1e3,
-    s.qa = a,
-    s.Wa = 0),
-    s.Xa
-}
-,
-BUJS.Ha.prototype.jn = function() {
-    var s = this
-      , a = s.ja.L()
-      , n = Math.min(s.la + s.La.Rs.Cs, s.ja.g._.length);
-    if (s.xa) {
-        if (s.la >= 0)
-            for (var e = s.la; e < n; e++)
-                if (s.ja.g._[e].t < a + 5) {
-                    s.un.Ra(s.ja.g._[e].n);
-                    break
-                }
-    } else {
-        if (s.la >= 0)
-            for (e = s.la; e < n; e++)
-                a > s.ja.g._[e].t + 2 * s.ja.h && (s.ja.g._[e]._a = !0,
-                s.Ba = 4,
-                s.Ua = a,
-                s.ja.k(s.ja.u.r),
-                s.fn(s.ja.g._[e].n, 4));
-        s.la = -1;
-        for (var t = 0; t < s.ja.g._.length; t++)
-            if (!s.ja.g._[t]._a) {
-                s.la = t;
-                break
-            }
-    }
-}
-,
-BUJS.Ha.prototype.$a = function(s) {
-    var a = this
-      , n = -1;
-    if (0 !== s || a.xa)
-        for (var e = a.ja.L(), t = a.la; t < a.la + 4 && !(a.la >= a.ja.g._.length || a.la < 0); t++) {
-            var u = a.ja.g._[t]
-              , i = u.n
-              , c = e - u.t;
-            if ((i === s || a.xa || a.sn) && (n = a.gn(c),
-            a.fn(s, n),
-            5 === i && a.Ma.push(new BUJS.Ta(a.La,e,a.La.Rs.$s,a.La.A.ts[0],(a.La.P.H - a.La.A.ts[0].width) / 2,a.La.P.X - a.La.Rs.Ws - a.La.A.ts[0].height / 2)),
-            n >= 0 || a.xa)) {
-                switch (i) {
-                case 5:
-                    a.Ma.push(new BUJS.Ta(a.La,e,a.La.Rs.$s,a.La.A.us[0],(a.La.P.H - a.La.A.us[0].width) / 2,a.La.P.X - a.La.Rs.Ws - a.La.A.us[0].height / 2))
-                }
-                if (4 !== n && 5 !== i) {
-                    var r = !0
-                      , b = 0;
-                    switch (i) {
-                    case 7:
-                        b = a.La.Rs.Ys;
-                        break;
-                    case 4:
-                        b = a.La.Rs.As;
-                        break;
-                    case 1:
-                        b = a.La.Rs.Gs;
-                        break;
-                    case 9:
-                        r = !1,
-                        b = a.La.Rs.Ys;
-                        break;
-                    case 6:
-                        r = !1,
-                        b = a.La.Rs.As;
-                        break;
-                    case 3:
-                        r = !1,
-                        b = a.La.Rs.Gs
-                    }
-                    b = a.La.Rs.Fs + b + a.La.A.os[0].height / 2,
-                    r ? a.Ma.push(new BUJS.Ta(a.La,e,a.La.Rs.$s,a.La.A.cs[0],a.La.Rs.Is - a.La.Rs.Hs + a.La.Rs.Es - a.La.Rs.Ms + a.La.Rs.Ps + a.La.A.os[0].width / 2 - a.La.A.cs[0].width / 2,b - a.La.A.cs[0].width / 2)) : a.Ma.push(new BUJS.Ta(a.La,e,a.La.Rs.$s,a.La.A.cs[0],a.La.P.H - (a.La.Rs.Is - a.La.Rs.Hs + a.La.Rs.Es - a.La.Rs.Ms + a.La.Rs.Ps + a.La.A.os[0].width / 2) - a.La.A.cs[0].width / 2,b - a.La.A.cs[0].height / 2))
-                }
-                5 === i ? a.ja.k(a.ja.u.b) : 0 === n ? a.ja.k(a.ja.u.i) : 4 === n ? a.ja.k(a.ja.u.r) : a.ja.k(a.ja.u.c),
-                a.fn(i, n),
-                u._a = !0,
-                a.la = -1;
-                for (var o = 0; o < a.ja.g._.length; o++)
-                    if (void 0 === a.ja.g._[o]._a || !a.ja.g._[o]._a) {
-                        a.la = o;
-                        break
-                    }
-                a.Ba = n,
-                a.Ua = e;
-                break
-            }
+    // delete all finished animations
+    for (i = _this.animations_.length - 1; i >= 0; i--) {
+        if (_this.animations_[i].startTime_ < 0) {
+            _this.animations_.splice(i, 1);
         }
-}
-,
-BUJS.Ha.prototype.gn = function(s) {
-    var a = this;
-    if (a.xa)
-        return 0;
-    var n = a.ja.h;
-    return s > 4 * n * 80 / 100 || s < 4 * -n ? -1 : (s < 0 && (s = -s),
-    s <= 4 * n * 5 / 100 ? 0 : s <= 4 * n * 15 / 100 ? 1 : s <= 4 * n * 27 / 100 ? 2 : s <= 4 * n * 40 / 100 ? 3 : 4)
-}
-,
-BUJS.Ha.prototype.pn = function() {
-    for (var s = this, a = 0; a < s.Ma.length; a++)
-        s.Ma[a].Ia(s.ja.L());
-    for (a = s.Ma.length - 1; a >= 0; a--)
-        s.Ma[a].Fa < 0 && s.Ma.splice(a, 1)
-}
-,
-BUJS.Ha.prototype.fn = function(s, a) {
-    var n = this
-      , e = n.an[a];
-    5 === s && (e = n.nn),
-    n.Oa >= 400 ? e *= n.tn : n.Oa >= 100 && (e *= n.en),
-    n.za += e,
-    n.Na[a]++,
-    4 !== a ? n.Oa++ : n.Oa = 0,
-    0 === n.Ba && 0 === a ? n.Ca++ : n.Ca = 0
-}
-,
-BUJS.prototype.ln = function() {
-    var s = this;
-    s._n(),
-    s.B("Loading extra UI components"),
-    $.get("template/modal.html", function(a) {
-        $("#template-container").html(a),
-        s.hn()
-    }),
-    s.d = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
-}
-,
-BUJS.prototype.vn = function(s) {
-    var a = document.querySelector(s)
-      , n = document.importNode(a.content, !0);
-    document.body.appendChild(n)
-}
-,
-BUJS.prototype.Un = function() {
-    var s = $("#login-modal");
-    s.on("shown.bs.modal", function() {
-        s.find("#username").focus()
-    }),
-    s.modal("show")
-}
-,
-BUJS.prototype.hn = function() {
-    var s = this;
-    s.B("Loading songs"),
-    $.get("notes/list.json", function(a) {
-        s.l = a,
-        s.Bn()
-    })
-}
-,
-BUJS.prototype.Bn = function() {
-    var s = this;
-    s.B(""),
-    s.vn("#songlist-template");
-    var a = $("#songlist-modal")
-      , n = a.find("#songlist-container");
-    for (var e in s.l) {
-        var t = s.l[e]
-          , u = document.createElement("li");
-        u.setAttribute("class", "songListItem"),
-        u.setAttribute("songid", e),
-        u.innerText = "[" + t.bpm.toFixed(1) + "] " + t.singer + " " + t.name + " (" + t.slkauthor + ")",
-        u.onclick = s.dn,
-        n.append(u)
     }
-    a.modal("show")
+};
+
+/**
+ * Add/reset combo, add score, perx, p/g/c/b/m counters,...
+ */
+BUJS.Game_.prototype.updateScore_ = function (key, keyResult) {
+    var _this = this;
+    var noteScore = 0;
+    if (key === 5) {
+        if (keyResult >= 0 && keyResult !== 4) {
+            noteScore = _this.spaceScore_;
+        }
+    }
+    else {
+        if (keyResult >= 0) {
+            noteScore = _this.noteScores_[keyResult];
+        }
+    }
+
+    // ratios with BEATUP
+    if (_this.combo_ >= 400) noteScore *= _this.blueBeatupRatio_;
+    else if (_this.combo_ >= 100) noteScore *= _this.yellowBeatupRatio_;
+    _this.score_ += noteScore;
+
+    // result : pgcbm
+    _this.pgcbm_[keyResult]++;
+
+    // update combo
+    //var prevCombo = _this.combo_;
+    if (keyResult !== 4 && keyResult >= 0) _this.combo_++;
+    else _this.combo_ = 0;
+
+    // update perx
+    if (_this.lastNoteResult_ === 0 && keyResult === 0) {		// still per?
+        _this.perx_++;
+    }
+    else _this.perx_ = 0;
+
+    if (_this.perx_ > _this.xmax_){
+        _this.xmax_ = _this.perx_;
+    }
+
+    // TODO: send to server
+};;function BUJS () {
 }
-,
-BUJS.prototype._n = function() {
-    var s = document.getElementById("cvs");
-    s.width = 980,
-    s.height = 400
-}
-,
-BUJS.prototype.dn = function() {
-    var s = this.getAttribute("songid");
-    bujs.a = new BUJS.Ha(s),
-    $("#songlist-modal").modal("hide")
-}
-,
-BUJS.prototype.B = function(s) {
-    var a = document.getElementById("cvs")
-      , n = a.getContext("2d")
-      , e = a.width
-      , t = a.height;
-    n.fillStyle = "black",
-    n.clearRect(0, 0, e, t),
-    n.font = "12px Arial",
-    n.fillStyle = "white",
-    n.textAlign = "center",
-    n.fillText(s, e / 2, t / 2)
-}
-,
-bujs = new BUJS,
-$(window).on("load", function() {
-    bujs.ln()
+
+BUJS.prototype.start_ = function () {
+    var _this = this;
+
+    // draw some "loading" things...
+    _this.initCanvas_();
+    _this.showLoadingMsg_("Loading extra UI components");
+
+    // load extra contents
+    $.get('template/modal.html', function (html) {
+        $('#template-container').html(html);
+        _this.loadSongList_();
+    });
+
+    _this.iOS_ = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+};
+
+BUJS.prototype.loadTemplate_ = function (id) {
+    var t = document.querySelector(id);
+    var clone = document.importNode(t.content, true);
+    document.body.appendChild(clone);
+};
+
+BUJS.prototype.showLogin_ = function () {
+    var login = $('#login-modal');
+    login.on("shown.bs.modal", function () {
+        login.find("#username").focus();
+    });
+    login.modal('show');
+};
+
+BUJS.prototype.loadSongList_ = function () {
+    var _this = this;
+    _this.showLoadingMsg_("Loading songs");
+    // fetch list from server
+    $.get("notes/list.json", function (list) {
+        console.log("song list: ", list);
+        _this.songList_ = list;
+        _this.showSongListModal_();
+    });
+};
+
+BUJS.prototype.showSongListModal_ = function () {
+    var _this = this;
+    _this.showLoadingMsg_("");
+    _this.loadTemplate_("#songlist-template");
+    var songlistModal = $('#songlist-modal');
+    var songlistContainer = songlistModal.find("#songlist-container");
+    for (var id in _this.songList_) {
+        var song = _this.songList_[id];
+        var li = document.createElement("li");
+        li.setAttribute("class", "songListItem");
+        li.setAttribute("songid", id);
+        li.innerText = "[" + song.bpm.toFixed(1) + "] " + song.singer + " " + song.name + " (" + song.slkauthor + ")";
+        li.onclick = _this.songItemClick_;
+        songlistContainer.append(li);
+    }
+    songlistModal.modal("show");
+};
+
+BUJS.prototype.initCanvas_ = function () {
+    var canvas = document.getElementById("cvs");
+    canvas.width = 980;
+    canvas.height = 400;
+};
+
+BUJS.prototype.songItemClick_ = function () {
+    var songId = this.getAttribute("songid");
+    bujs.game_ = new BUJS.Game_(songId);
+    $('#songlist-modal').modal("hide");
+};
+
+BUJS.prototype.showLoadingMsg_ = function (msg) {
+    var canvas = document.getElementById("cvs");
+    var ctx = canvas.getContext("2d");
+    var width = canvas.width;
+    var height = canvas.height;
+    ctx.fillStyle = "black";
+    ctx.clearRect(0, 0, width, height);
+    ctx.font = "12px Arial";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText(msg, width / 2, height / 2);
+};
+
+bujs = new BUJS();
+$(window).on('load', function () {
+    bujs.start_();
 });
