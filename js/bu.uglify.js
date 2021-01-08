@@ -760,7 +760,7 @@ BUJS.Input_.prototype.checkKeyboard_ = function (keyCode) {
             if (!bujs.game_.autoplay_) _this.keyDown_(9);
             break;
         case 54:    // 6
-        case 75:    // k
+        case 74:    // j
         case 102:   // numpad6
         case 39:    // right
             if (!bujs.game_.autoplay_) _this.keyDown_(6);
