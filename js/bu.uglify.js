@@ -766,7 +766,7 @@ BUJS.Input_.prototype.checkKeyboard_ = function (keyCode) {
             if (!bujs.game_.autoplay_) _this.keyDown_(6);
             break;
         case 51:    // 3
-        case 77:    // m
+        case 78:    // n
         case 99:    // numpad3
         case 34:    // pg dn
             if (!bujs.game_.autoplay_) _this.keyDown_(3);
